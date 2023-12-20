@@ -5,27 +5,22 @@
 <%@attribute name="titleCode" type="java.lang.String" required="false" %>
 <%@attribute name="footScripts" fragment="true" required="false" %>
 
-<html lang="${pageContext.response.locale.language}">
+<html lang="${pageContext.response.locale.language}" data-bs-theme="light">
 <head>
-	<tags:html-head titleCode="${titleCode}" title="${title}"/>
+    <tags:html-head titleCode="${titleCode}" title="${title}"/>
 </head>
 
 <body>
 
-<tags:nav-topbar/>
+<%--<tags:nav-topbar/>--%>
 
-<div class="container-fluid">
-	<div class="row d-print-block">
-		<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar sidebar-fixed d-print-none collapse">
-			<div class="position-sticky pt-3 sidebar-sticky">
-				<tags:nav-sidebar-menu/>
-			</div>
-		</nav>
+<div class="layout-main d-flex flex-nowrap">
+    <tags:nav-sidebar-menu/>
 
-		<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 col-print-12">
-			<jsp:doBody/>
-		</main>
-	</div>
+    <div class="b-example-divider b-example-vr"></div>
+    <div class="flex-fill">
+        <jsp:doBody/>
+    </div>
 </div>
 
 <tags:html-foot>

@@ -1,13 +1,20 @@
-#------------------------------------------------------------------------------------------------------------------------
-# spring configuration of database
-#------------------------------------------------------------------------------------------------------------------------
-database:
-  host: localhost
-  port:
-  schema: heaplib
-  user: heaplib
-  password: heaplib
-  url: jdbc:mysql://${database.host}:${database.port}/${database.schema}
+app:
+  #------------------------------------------------------------------------------------------------------------------------
+  # database address
+  #------------------------------------------------------------------------------------------------------------------------
+  database:
+    host: localhost
+    port:
+    schema: heaplib
+    user: heaplib
+    password: heaplib
+    url: jdbc:mysql://${app.database.host}:${app.database.port}/${app.database.schema}
+
+  #------------------------------------------------------------------------------------------------------------------------
+  # input files path
+  #------------------------------------------------------------------------------------------------------------------------
+  inputFilesFolder: "."
+
 
 
 #------------------------------------------------------------------------------------------------------------------------
@@ -45,9 +52,9 @@ spring:
           plan_parameter_metadata_max_size: 32 #https://stackoverflow.com/questions/31557076/spring-hibernate-query-plan-cache-memory-usage
   
   datasource:
-    url: ${database.url}
-    username: ${database.user}
-    password: ${database.password}
+    url: ${app.database.url}
+    username: ${app.database.user}
+    password: ${app.database.password}
   
   flyway:
     enabled: false

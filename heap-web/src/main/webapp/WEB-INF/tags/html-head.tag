@@ -14,6 +14,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="${cp}/static/vendor/bootstrap@5.2.3/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+<link href="${cp}/static/css/layout.css" rel="stylesheet">
 <link href="${cp}/static/dist/scss/theme.css" rel="stylesheet">
 
 <title>
