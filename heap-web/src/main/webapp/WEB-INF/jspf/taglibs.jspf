@@ -1,0 +1,10 @@
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="spring" uri="http://www.springframework.org/tags" %>
+<%@taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="tags" tagdir="/WEB-INF/tags" %>
+
+<c:set var="cp" value="${pageContext.servletContext.contextPath}"/>
+<c:set var="locale" value="${pageContext.response.locale}"/>
+<c:set var="SPACE" value=" "/>
+<%--@elvariable id="h" type="com.github.ol_loginov.heaplibweb.support.JstlTool"--%>

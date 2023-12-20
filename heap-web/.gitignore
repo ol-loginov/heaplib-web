@@ -1,0 +1,16 @@
+/target/
+/.settings/
+.classpath
+.project
+.idea/
+node_modules/
+.parcel-cache/
+
+*.iml
+/bin/
+/docker/docker-data/
+/docker/data/
+/docker/logs/
+/docker/config/
+
+*-local.yaml

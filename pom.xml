@@ -38,6 +38,7 @@
     <module>hprof-oql-engine</module>
     <module>heaplib</module>
     <module>heap-cli</module>
+    <module>heap-web</module>
   </modules>
 
   <licenses>

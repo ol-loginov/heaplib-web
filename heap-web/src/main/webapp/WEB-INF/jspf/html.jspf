@@ -1,0 +1,3 @@
+<!DOCTYPE html>
+<%@ page contentType="text/html" pageEncoding="utf-8" %>
+<%@include file="/WEB-INF/jspf/taglibs.jspf" %>
