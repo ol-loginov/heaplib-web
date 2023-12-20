@@ -4,10 +4,14 @@ import com.github.ol_loginov.heaplibweb.services.InputFilesManager;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.view.UrlBasedViewResolver;
 
 import java.io.IOException;
 
@@ -22,7 +26,15 @@ public class InputFilesController {
 
     @GetMapping
     public String showDashboard(Model model) throws IOException {
+        model.addAttribute("inputFilesFolder", inputFilesManager.getInputFilesFolder());
         model.addAttribute("inputFiles", inputFilesManager.listInputFiles());
+        model.addAttribute("inputLoads", inputFilesManager.listLoads());
         return "inputs";
+    }
+
+    @PostMapping("/load")
+    public String loadRelativeFIle(@RequestParam String relativePath) {
+        inputFilesManager.createLoad(relativePath);
+        return UrlBasedViewResolver.REDIRECT_URL_PREFIX + URL;
     }
 }

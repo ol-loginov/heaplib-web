@@ -55,9 +55,7 @@ spring:
     url: ${app.database.url}
     username: ${app.database.user}
     password: ${app.database.password}
-  
-  flyway:
-    enabled: false
+
 
 #------------------------------------------------------------------------------------------------------------------------
 # servlet options

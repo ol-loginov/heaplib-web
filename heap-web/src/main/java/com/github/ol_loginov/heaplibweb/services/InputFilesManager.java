@@ -1,5 +1,11 @@
 package com.github.ol_loginov.heaplibweb.services;
 
+import com.github.ol_loginov.heaplibweb.repository.InputFileLoad;
+import com.github.ol_loginov.heaplibweb.repository.InputFileLoadRepository;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,43 +20,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public interface InputFilesManager {
+    Path getInputFilesFolder();
+
     List<InputFile> listInputFiles() throws IOException;
-}
 
-@Service
-@Slf4j
-class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
-    @Value("${app.inputFilesFolder:.}")
-    private Path storeFolder;
+    List<InputFileLoad> listLoads();
 
-    @Override
-    public void afterPropertiesSet() {
-        storeFolder = storeFolder.toAbsolutePath();
-        log.info("{}", Map.of(
-                "storeFolder", storeFolder));
-    }
-
-    @Override
-    public List<InputFile> listInputFiles() throws IOException {
-        try (var stream = Files.list(storeFolder)) {
-            return stream
-                    .filter(e -> e.toFile().getName().endsWith(".hprof"))
-                    .map(e -> {
-                        BasicFileAttributes basicAttributes = readBasicAttributes(e);
-                        return new InputFile(storeFolder.relativize(e).toString(),
-                                basicAttributes == null ? null : basicAttributes.lastModifiedTime().toInstant(),
-                                basicAttributes == null ? null : basicAttributes.size());
-                    })
-                    .collect(Collectors.toList());
-        }
-    }
-
-    private BasicFileAttributes readBasicAttributes(Path e) {
-        try {
-            return Files.readAttributes(e, BasicFileAttributes.class);
-        } catch (IOException ex) {
-            log.warn("cannot read attributes of file {}", e);
-            return null;
-        }
-    }
+    void createLoad(String relativePath);
 }

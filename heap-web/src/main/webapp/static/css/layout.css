@@ -25,3 +25,7 @@ body {
     width: 0;
     height: 100vh;
 }
+
+h2, .h2 {
+    font-size: 2rem;
+}

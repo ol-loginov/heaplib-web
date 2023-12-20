@@ -7,8 +7,10 @@
     </Appenders>
 
     <Loggers>
-        <Root level="info">
+        <Root level="warn">
             <AppenderRef ref="Console"/>
         </Root>
+
+        <Logger name="com.github.ol_loginov" level="info"/>
     </Loggers>
 </Configuration>
