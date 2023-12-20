@@ -12,4 +12,5 @@ import java.time.Instant;
 public class InputFile {
     private String path;
     private Instant modificationTime;
+    private Long size;
 }

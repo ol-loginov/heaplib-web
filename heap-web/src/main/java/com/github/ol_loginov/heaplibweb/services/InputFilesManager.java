@@ -38,7 +38,8 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
                     .map(e -> {
                         BasicFileAttributes basicAttributes = readBasicAttributes(e);
                         return new InputFile(storeFolder.relativize(e).toString(),
-                                basicAttributes == null ? null : basicAttributes.lastModifiedTime().toInstant());
+                                basicAttributes == null ? null : basicAttributes.lastModifiedTime().toInstant(),
+                                basicAttributes == null ? null : basicAttributes.size());
                     })
                     .collect(Collectors.toList());
         }

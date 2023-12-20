@@ -9,14 +9,16 @@
                 <thead>
                 <tr>
                     <th>File</th>
-                    <th>Modification time</th>
+                    <th class="text-center">Modification time</th>
+                    <th class="text-end">Size</th>
                 </tr>
                 </thead>
                 <tbody>
                 <c:forEach var="inputFile" items="${inputFiles}">
                     <tr>
                         <td>${h.h(inputFile.path)}</td>
-                        <td>${inputFile.modificationTime}</td>
+                        <td class="text-center">${inputFile.modificationTime}</td>
+                        <td class="text-end">${inputFile.size}</td>
                     </tr>
                 </c:forEach>
                 </tbody>
