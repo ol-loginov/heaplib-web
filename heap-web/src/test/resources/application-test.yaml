@@ -1,0 +1,7 @@
+app:
+  database:
+    schema: heaplib_test
+
+spring:
+  main:
+    allow-bean-definition-overriding: true

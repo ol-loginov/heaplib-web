@@ -14,20 +14,20 @@ import java.util.concurrent.Executors;
 @Service
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
-class InputLoadWorkerImpl implements InputLoadWorker, DisposableBean {
-    private final ObjectProvider<InputLoadWork> inputLoadWorkFactory;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor(new DaemonThreadFactory());
+class InputLoaderFactoryImpl implements InputLoaderFactory, DisposableBean {
+	private final ObjectProvider<InputLoader> inputLoaderProvider;
+	private final ExecutorService executor = Executors.newSingleThreadExecutor(new DaemonThreadFactory());
 
-    @Override
-    public void destroy() {
-        executor.shutdownNow();
-    }
+	@Override
+	public void destroy() {
+		executor.shutdownNow();
+	}
 
-    @Override
-    public void add(int inputFileLoadId) {
-        var task = inputLoadWorkFactory
-                .getObject()
-                .withEntityId(inputFileLoadId);
-        executor.submit(task);
-    }
+	@Override
+	public void add(int inputFileLoadId) {
+		var task = inputLoaderProvider
+			.getObject()
+			.withEntityId(inputFileLoadId);
+		executor.submit(task);
+	}
 }

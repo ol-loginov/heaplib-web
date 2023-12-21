@@ -1,8 +1,10 @@
 package com.github.ol_loginov.heaplibweb.services;
 
-import com.github.ol_loginov.heaplibweb.repository.InputFileLoad;
-import com.github.ol_loginov.heaplibweb.repository.InputFileLoadRepository;
-import com.github.ol_loginov.heaplibweb.repository.InputFileStatus;
+import com.github.ol_loginov.heaplibweb.repository.HeapFile;
+import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository;
+import com.github.ol_loginov.heaplibweb.repository.HeapFileStatus;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.netbeans.lib.profiler.heap.Heap;
@@ -18,9 +20,10 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class InputLoadWork implements Runnable {
+public class InputLoader implements Runnable {
 	private final TransactionOperations transactionOperations;
-	private final InputFileLoadRepository inputFileLoadRepository;
+	private final HeapFileRepository heapFileRepository;
+	private final HeapEntityRepository heapEntityRepository;
 	private final InputFilesManager inputLoadWorkFactory;
 
 	private int entityId;
@@ -30,7 +33,7 @@ public class InputLoadWork implements Runnable {
 	private long progressLimit = 1;
 	private long progressCurrent = 0;
 
-	public InputLoadWork withEntityId(int entityId) {
+	public InputLoader withEntityId(int entityId) {
 		this.entityId = entityId;
 		return this;
 	}
@@ -45,7 +48,7 @@ public class InputLoadWork implements Runnable {
 	}
 
 	private void runUnsafe() throws IOException {
-		var entity = loadEntity();
+		var entity = loadFileEntity();
 		var dump = inputLoadWorkFactory.getInputFile(entity.getRelativePath()).toFile();
 
 		Heap heap;
@@ -55,22 +58,27 @@ public class InputLoadWork implements Runnable {
 			heap = HeapFactory2.createFastHeap(dump);
 		}
 
+		var heapEntity = new HeapEntity();
+		heapEntity.setFile(entity);
+		heapEntityRepository.save(heapEntity);
+
 		var summary = heap.getSummary();
 		var allClasses = heap.getAllClasses();
 
 		progressLimit = allClasses.size() + summary.getTotalAllocatedInstances();
 		progressCurrent = 0;
+		updateProgress();
 
-		heap.getAllClasses().forEach(javaClass -> {
-
+		heap.getAllClasses().forEach(clazz -> {
+			progressLimit += 1;
 		});
 	}
 
-	private InputFileLoad loadEntity() {
+	private HeapFile loadFileEntity() {
 		var result = transactionOperations.execute(st -> {
-			var entity = inputFileLoadRepository.findById(entityId).orElseThrow();
-			entity.setStatus(InputFileStatus.LOADING);
-			inputFileLoadRepository.save(entity);
+			var entity = heapFileRepository.findById(entityId).orElseThrow();
+			entity.setStatus(HeapFileStatus.LOADING);
+			heapFileRepository.save(entity);
 
 			return entity;
 		});
@@ -83,10 +91,10 @@ public class InputLoadWork implements Runnable {
 	private void updateProgress() {
 		var progress = Math.round(100 * (progressCurrent / (double) progressLimit));
 		transactionOperations.executeWithoutResult(st -> {
-			var entity = inputFileLoadRepository.findById(entityId).orElseThrow();
+			var entity = heapFileRepository.findById(entityId).orElseThrow();
 			if (entity.getLoadProgress() == null || progress != Math.round(100 * entity.getLoadProgress())) {
 				entity.setLoadProgress(progress / 100f);
-				inputFileLoadRepository.save(entity);
+				heapFileRepository.save(entity);
 			}
 		});
 	}

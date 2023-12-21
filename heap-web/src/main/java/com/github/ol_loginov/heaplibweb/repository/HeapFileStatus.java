@@ -1,6 +1,6 @@
 package com.github.ol_loginov.heaplibweb.repository;
 
-public enum InputFileStatus {
+public enum HeapFileStatus {
     PENDING,
     LOADING,
     LOADING_ERROR,

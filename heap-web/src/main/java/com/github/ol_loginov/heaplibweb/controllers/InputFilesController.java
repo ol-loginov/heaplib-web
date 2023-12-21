@@ -4,7 +4,6 @@ import com.github.ol_loginov.heaplibweb.services.InputFilesManager;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,21 +19,21 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class InputFilesController {
-    public static final String URL = "/inputs";
+	public static final String URL = "/inputs";
 
-    private final InputFilesManager inputFilesManager;
+	private final InputFilesManager inputFilesManager;
 
-    @GetMapping
-    public String showDashboard(Model model) throws IOException {
-        model.addAttribute("inputFilesFolder", inputFilesManager.getInputFilesFolder());
-        model.addAttribute("inputFiles", inputFilesManager.listInputFiles());
-        model.addAttribute("inputLoads", inputFilesManager.listLoads());
-        return "inputs";
-    }
+	@GetMapping
+	public String showDashboard(Model model) throws IOException {
+		model.addAttribute("inputFilesFolder", inputFilesManager.getInputFilesFolder());
+		model.addAttribute("inputFiles", inputFilesManager.listInputFiles());
+		model.addAttribute("inputLoads", inputFilesManager.listLoadedFiles());
+		return "inputs";
+	}
 
-    @PostMapping("/load")
-    public String loadRelativeFIle(@RequestParam String relativePath) {
-        inputFilesManager.createLoad(relativePath);
-        return UrlBasedViewResolver.REDIRECT_URL_PREFIX + URL;
-    }
+	@PostMapping("/load")
+	public String loadRelativeFIle(@RequestParam String relativePath) {
+		inputFilesManager.createLoad(relativePath);
+		return UrlBasedViewResolver.REDIRECT_URL_PREFIX + URL;
+	}
 }
