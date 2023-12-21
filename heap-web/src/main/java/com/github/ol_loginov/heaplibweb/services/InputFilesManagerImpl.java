@@ -51,6 +51,11 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
         });
     }
 
+    @Override
+    public Path getInputFile(String relativePath) {
+        return inputFilesFolder.resolve(relativePath);
+    }
+
     @Transactional
     @Override
     public List<InputFile> listInputFiles() throws IOException {

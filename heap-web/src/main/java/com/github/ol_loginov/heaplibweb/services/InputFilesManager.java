@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 public interface InputFilesManager {
     Path getInputFilesFolder();
 
+    Path getInputFile(String relativePath);
+
     List<InputFile> listInputFiles() throws IOException;
 
     List<InputFileLoad> listLoads();
