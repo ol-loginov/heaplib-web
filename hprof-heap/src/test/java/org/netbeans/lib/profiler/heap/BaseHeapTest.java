@@ -1,12 +1,12 @@
 /**
  * Copyright 2014 Alexey Ragozin
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,12 +48,12 @@ public abstract class BaseHeapTest {
         Heap heap = getHeap();
         JavaClass jclass = heap.getJavaClassByName(DummyA.class.getName());
         int n = 0;
-        for(Instance i : jclass.getInstances()) {
+        for (Instance i : jclass.getInstances()) {
             ++n;
             assertThat(i.getFieldValues().size()).isEqualTo(1);
             FieldValue fv = i.getFieldValues().get(0);
             assertThat(fv).isInstanceOf(ObjectFieldValue.class);
-            Instance ii = ((ObjectFieldValue)fv).getInstance();
+            Instance ii = ((ObjectFieldValue) fv).getInstance();
             assertThat(ii).isInstanceOf(PrimitiveArrayInstance.class);
         }
 
@@ -66,13 +66,13 @@ public abstract class BaseHeapTest {
         Heap heap = getHeap();
         JavaClass jclass = heap.getJavaClassByName(DummyA.class.getName());
         int n = 0;
-        for(Instance i : heap.getAllInstances()) {
+        for (Instance i : heap.getAllInstances()) {
             if (i.getJavaClass() == jclass) {
                 ++n;
                 assertThat(i.getFieldValues().size()).isEqualTo(1);
                 FieldValue fv = i.getFieldValues().get(0);
                 assertThat(fv).isInstanceOf(ObjectFieldValue.class);
-                Instance ii = ((ObjectFieldValue)fv).getInstance();
+                Instance ii = ((ObjectFieldValue) fv).getInstance();
                 assertThat(ii).isInstanceOf(PrimitiveArrayInstance.class);
             }
         }
@@ -86,11 +86,11 @@ public abstract class BaseHeapTest {
         Heap heap = getHeap();
         JavaClass jclass = heap.getJavaClassByName(DummyB.class.getName());
         int n = 0;
-        for(Instance i : jclass.getInstances()) {
+        for (Instance i : jclass.getInstances()) {
             ++n;
             int no = Integer.valueOf(stringValue(walkFirst(i, "seqNo")));
             SortedSet<String> testSet = new TreeSet<String>();
-            for(Instance e :  HeapWalker.walk(i, "list.elementData[*]")) {
+            for (Instance e : HeapWalker.walk(i, "list.elementData[*]")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -98,7 +98,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("", no));
 
             testSet.clear();
-            for(Instance e :  HeapWalker.walk(i, "map.table[*].key")) {
+            for (Instance e : HeapWalker.walk(i, "map.table[*].key")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -107,7 +107,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet("k", no).containsAll(testSet)).isTrue();
 
             testSet.clear();
-            for(Instance e :  HeapWalker.walk(i, "map.table[*].value")) {
+            for (Instance e : HeapWalker.walk(i, "map.table[*].value")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -131,7 +131,7 @@ public abstract class BaseHeapTest {
         ia.mark(i.getInstanceId());
 
         int d = 1;
-        while(!ia.isExhausted()) {
+        while (!ia.isExhausted()) {
             System.out.println("\nDepth " + d);
             ia.report();
             ++d;
@@ -144,11 +144,11 @@ public abstract class BaseHeapTest {
         Heap heap = getHeap();
         JavaClass jclass = heap.getJavaClassByName(DummyB.class.getName());
         int n = 0;
-        for(Instance i : jclass.getInstances()) {
+        for (Instance i : jclass.getInstances()) {
             ++n;
             int no = Integer.valueOf(stringValue(walkFirst(i, "seqNo")));
             SortedSet<String> testSet = new TreeSet<String>();
-            for(Instance e :  HeapWalker.walk(i, "list.elementData[*]")) {
+            for (Instance e : HeapWalker.walk(i, "list.elementData[*]")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -156,7 +156,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("", no));
 
             testSet.clear();
-            for(Instance e :  HeapWalker.walk(i, "map?entrySet.key")) {
+            for (Instance e : HeapWalker.walk(i, "map?entrySet.key")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -164,7 +164,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("k", no));
 
             testSet.clear();
-            for(Instance e :  HeapWalker.walk(i, "map?entrySet.value")) {
+            for (Instance e : HeapWalker.walk(i, "map?entrySet.value")) {
                 if (e != null) {
                     testSet.add(stringValue(e));
                 }
@@ -172,7 +172,7 @@ public abstract class BaseHeapTest {
             assertThat(testSet).isEqualTo(testSet("v", no));
 
             if (testSet.size() > 5) {
-                assertThat(HeapWalker.valueOf(i, "map?entrySet[key=k3].value")).isEqualTo("v3");
+                assertThat(HeapWalker.<String>valueOf(i, "map?entrySet[key=k3].value")).isEqualTo("v3");
             }
         }
 
@@ -186,9 +186,9 @@ public abstract class BaseHeapTest {
         Heap heap = getHeap();
         JavaClass jclass = heap.getJavaClassByName(ArrayList.class.getName());
         int n = 0;
-        for(Instance i : jclass.getInstances()) {
+        for (Instance i : jclass.getInstances()) {
             int m = 0;
-            for(Instance e :  HeapWalker.walk(i, "elementData[*](**.DummyA)")) {
+            for (Instance e : HeapWalker.walk(i, "elementData[*](**.DummyA)")) {
                 ++m;
             }
             if (m != 0) {
@@ -216,7 +216,7 @@ public abstract class BaseHeapTest {
         JavaClass jclass = heap.getJavaClassByName(DummyC.class.getName());
         int n = 0;
 
-        for(Instance i : jclass.getInstances()) {
+        for (Instance i : jclass.getInstances()) {
             assertArrayEquals(bool_values, valueOf(i, "bool_values"));
             assertArrayEquals(byte_values, valueOf(i, "byte_values"));
             assertArrayEquals(short_values, valueOf(i, "short_values"));
@@ -226,14 +226,14 @@ public abstract class BaseHeapTest {
             assertArrayEquals(float_values, valueOf(i, "float_values"));
             assertArrayEquals(double_values, valueOf(i, "double_values"));
 
-            assertThat(valueOf(i, "bool_values[0]")).isEqualTo(Boolean.TRUE);
-            assertThat(valueOf(i, "byte_values[0]")).isEqualTo(Byte.MIN_VALUE);
-            assertThat(valueOf(i, "short_values[0]")).isEqualTo(Short.MIN_VALUE);
-            assertThat(valueOf(i, "char_values[0]")).isEqualTo(Character.MIN_VALUE);
-            assertThat(valueOf(i, "int_values[0]")).isEqualTo(Integer.MIN_VALUE);
-            assertThat(valueOf(i, "long_values[0]")).isEqualTo(Long.MIN_VALUE);
-            assertThat(valueOf(i, "float_values[0]")).isEqualTo(Float.MIN_VALUE);
-            assertThat(valueOf(i, "double_values[0]")).isEqualTo(Double.MIN_VALUE);
+            assertThat(HeapWalker.<Boolean>valueOf(i, "bool_values[0]")).isEqualTo(Boolean.TRUE);
+            assertThat(HeapWalker.<Byte>valueOf(i, "byte_values[0]")).isEqualTo(Byte.MIN_VALUE);
+            assertThat(HeapWalker.<Short>valueOf(i, "short_values[0]")).isEqualTo(Short.MIN_VALUE);
+            assertThat(HeapWalker.<Character>valueOf(i, "char_values[0]")).isEqualTo(Character.MIN_VALUE);
+            assertThat(HeapWalker.<Integer>valueOf(i, "int_values[0]")).isEqualTo(Integer.MIN_VALUE);
+            assertThat(HeapWalker.<Long>valueOf(i, "long_values[0]")).isEqualTo(Long.MIN_VALUE);
+            assertThat(HeapWalker.<Float>valueOf(i, "float_values[0]")).isEqualTo(Float.MIN_VALUE);
+            assertThat(HeapWalker.<Double>valueOf(i, "double_values[0]")).isEqualTo(Double.MIN_VALUE);
 
             ++n;
         }
@@ -283,56 +283,56 @@ public abstract class BaseHeapTest {
 
         Instance i = jclass.getInstances().get(0);
 
-        assertThat(HeapWalker.valueOf(i, "structField?className")).isEqualTo(DummyC.Struct.class.getName());
-        assertThat(HeapWalker.valueOf(i, "structField?simpleClassName")).isEqualTo("Struct");
+        assertThat(HeapWalker.<String>valueOf(i, "structField?className")).isEqualTo(DummyC.Struct.class.getName());
+        assertThat(HeapWalker.<String>valueOf(i, "structField?simpleClassName")).isEqualTo("Struct");
 
-        assertThat(HeapWalker.valueOf(i, "structField.trueField")).isEqualTo(true);
-        assertThat(HeapWalker.valueOf(i, "structField.falseField")).isEqualTo(false);
-        assertThat(HeapWalker.valueOf(i, "structField.byteField")).isEqualTo((byte) 13);
-        assertThat(HeapWalker.valueOf(i, "structField.shortField")).isEqualTo((short) -14);
-        assertThat(HeapWalker.valueOf(i, "structField.charField")).isEqualTo((char) 15);
-        assertThat(HeapWalker.valueOf(i, "structField.intField")).isEqualTo(0x66666666);
-        assertThat(HeapWalker.valueOf(i, "structField.longField")).isEqualTo(0x6666666666l);
-        assertThat(HeapWalker.valueOf(i, "structField.floatField")).isEqualTo(0.1f);
-        assertThat(HeapWalker.valueOf(i, "structField.doubleField")).isEqualTo(-0.2);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structField.trueField")).isEqualTo(true);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structField.falseField")).isEqualTo(false);
+        assertThat(HeapWalker.<Byte>valueOf(i, "structField.byteField")).isEqualTo((byte) 13);
+        assertThat(HeapWalker.<Short>valueOf(i, "structField.shortField")).isEqualTo((short) -14);
+        assertThat(HeapWalker.<Character>valueOf(i, "structField.charField")).isEqualTo((char) 15);
+        assertThat(HeapWalker.<Integer>valueOf(i, "structField.intField")).isEqualTo(0x66666666);
+        assertThat(HeapWalker.<Long>valueOf(i, "structField.longField")).isEqualTo(0x6666666666L);
+        assertThat(HeapWalker.<Float>valueOf(i, "structField.floatField")).isEqualTo(0.1f);
+        assertThat(HeapWalker.<Double>valueOf(i, "structField.doubleField")).isEqualTo(-0.2);
 
-        assertThat(HeapWalker.valueOf(i, "structField.trueBoxedField")).isEqualTo(true);
-        assertThat(HeapWalker.valueOf(i, "structField.falseBoxedField")).isEqualTo(false);
-        assertThat(HeapWalker.valueOf(i, "structField.byteBoxedField")).isEqualTo((byte) 13);
-        assertThat(HeapWalker.valueOf(i, "structField.shortBoxedField")).isEqualTo((short) -14);
-        assertThat(HeapWalker.valueOf(i, "structField.charBoxedField")).isEqualTo((char) 15);
-        assertThat(HeapWalker.valueOf(i, "structField.intBoxedField")).isEqualTo(0x66666666);
-        assertThat(HeapWalker.valueOf(i, "structField.longBoxedField")).isEqualTo(0x6666666666l);
-        assertThat(HeapWalker.valueOf(i, "structField.floatBoxedField")).isEqualTo(0.1f);
-        assertThat(HeapWalker.valueOf(i, "structField.doubleBoxedField")).isEqualTo(-1.2);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structField.trueBoxedField")).isEqualTo(true);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structField.falseBoxedField")).isEqualTo(false);
+        assertThat(HeapWalker.<Byte>valueOf(i, "structField.byteBoxedField")).isEqualTo((byte) 13);
+        assertThat(HeapWalker.<Short>valueOf(i, "structField.shortBoxedField")).isEqualTo((short) -14);
+        assertThat(HeapWalker.<Character>valueOf(i, "structField.charBoxedField")).isEqualTo((char) 15);
+        assertThat(HeapWalker.<Integer>valueOf(i, "structField.intBoxedField")).isEqualTo(0x66666666);
+        assertThat(HeapWalker.<Long>valueOf(i, "structField.longBoxedField")).isEqualTo(0x6666666666L);
+        assertThat(HeapWalker.<Float>valueOf(i, "structField.floatBoxedField")).isEqualTo(0.1f);
+        assertThat(HeapWalker.<Double>valueOf(i, "structField.doubleBoxedField")).isEqualTo(-1.2);
 
-        assertThat(HeapWalker.valueOf(i, "structField.textField")).isEqualTo("this is struct");
+        assertThat(HeapWalker.<String>valueOf(i, "structField.textField")).isEqualTo("this is struct");
 
         // match field by type
-        assertThat(HeapWalker.valueOf(i, "structField.*[?simpleClassName=Double]")).isEqualTo(-1.2);
-        assertThat(HeapWalker.valueOf(i, "structField.*[(**)?simpleClassName=Double]")).isEqualTo(-1.2);
+        assertThat(HeapWalker.<Double>valueOf(i, "structField.*[?simpleClassName=Double]")).isEqualTo(-1.2);
+        assertThat(HeapWalker.<Double>valueOf(i, "structField.*[(**)?simpleClassName=Double]")).isEqualTo(-1.2);
 
-        assertThat(HeapWalker.valueOf(i, "structArray[*].trueField")).isEqualTo(true);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].falseField")).isEqualTo(false);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].byteField")).isEqualTo((byte) 13);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].shortField")).isEqualTo((short) -14);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].charField")).isEqualTo((char) 15);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].intField")).isEqualTo(0x66666666);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].longField")).isEqualTo(0x6666666666l);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].floatField")).isEqualTo(0.1f);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].doubleField")).isEqualTo(-0.2);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structArray[*].trueField")).isEqualTo(true);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structArray[*].falseField")).isEqualTo(false);
+        assertThat(HeapWalker.<Byte>valueOf(i, "structArray[*].byteField")).isEqualTo((byte) 13);
+        assertThat(HeapWalker.<Short>valueOf(i, "structArray[*].shortField")).isEqualTo((short) -14);
+        assertThat(HeapWalker.<Character>valueOf(i, "structArray[*].charField")).isEqualTo((char) 15);
+        assertThat(HeapWalker.<Integer>valueOf(i, "structArray[*].intField")).isEqualTo(0x66666666);
+        assertThat(HeapWalker.<Long>valueOf(i, "structArray[*].longField")).isEqualTo(0x6666666666L);
+        assertThat(HeapWalker.<Float>valueOf(i, "structArray[*].floatField")).isEqualTo(0.1f);
+        assertThat(HeapWalker.<Double>valueOf(i, "structArray[*].doubleField")).isEqualTo(-0.2);
 
-        assertThat(HeapWalker.valueOf(i, "structArray[*].trueBoxedField")).isEqualTo(true);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].falseBoxedField")).isEqualTo(false);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].byteBoxedField")).isEqualTo((byte) 13);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].shortBoxedField")).isEqualTo((short) -14);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].charBoxedField")).isEqualTo((char) 15);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].intBoxedField")).isEqualTo(0x66666666);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].longBoxedField")).isEqualTo(0x6666666666l);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].floatBoxedField")).isEqualTo(0.1f);
-        assertThat(HeapWalker.valueOf(i, "structArray[*].doubleBoxedField")).isEqualTo(-1.2);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structArray[*].trueBoxedField")).isEqualTo(true);
+        assertThat(HeapWalker.<Boolean>valueOf(i, "structArray[*].falseBoxedField")).isEqualTo(false);
+        assertThat(HeapWalker.<Byte>valueOf(i, "structArray[*].byteBoxedField")).isEqualTo((byte) 13);
+        assertThat(HeapWalker.<Short>valueOf(i, "structArray[*].shortBoxedField")).isEqualTo((short) -14);
+        assertThat(HeapWalker.<Character>valueOf(i, "structArray[*].charBoxedField")).isEqualTo((char) 15);
+        assertThat(HeapWalker.<Integer>valueOf(i, "structArray[*].intBoxedField")).isEqualTo(0x66666666);
+        assertThat(HeapWalker.<Long>valueOf(i, "structArray[*].longBoxedField")).isEqualTo(0x6666666666L);
+        assertThat(HeapWalker.<Float>valueOf(i, "structArray[*].floatBoxedField")).isEqualTo(0.1f);
+        assertThat(HeapWalker.<Double>valueOf(i, "structArray[*].doubleBoxedField")).isEqualTo(-1.2);
 
-        assertThat(HeapWalker.valueOf(i, "structArray[*].textField")).isEqualTo("this is struct #1");
+        assertThat(HeapWalker.<String>valueOf(i, "structArray[*].textField")).isEqualTo("this is struct #1");
     }
 
     @Test
@@ -374,7 +374,7 @@ public abstract class BaseHeapTest {
         DummyS proto = new DummyS();
         Instance dummyS = jclass.getInstances().get(0);
 
-        assertThat(valueOf(dummyS, "latinString")).isEqualTo(proto.latinString);
+        assertThat(HeapWalker.<String >valueOf(dummyS, "latinString")).isEqualTo(proto.latinString);
     }
 
     @Test
@@ -385,7 +385,7 @@ public abstract class BaseHeapTest {
         DummyS proto = new DummyS();
         Instance dummyS = jclass.getInstances().get(0);
 
-        assertThat(valueOf(dummyS, "cyrillicString")).isEqualTo(proto.cyrillicString);
+        assertThat(HeapWalker.<String >valueOf(dummyS, "cyrillicString")).isEqualTo(proto.cyrillicString);
     }
 
     @Test
@@ -396,12 +396,12 @@ public abstract class BaseHeapTest {
         DummyS proto = new DummyS();
         Instance dummyS = jclass.getInstances().get(0);
 
-        assertThat(valueOf(dummyS, "unicodeString")).isEqualTo(proto.unicodeString);
+        assertThat(HeapWalker.<String >valueOf(dummyS, "unicodeString")).isEqualTo(proto.unicodeString);
     }
 
     private Object[] scan(Iterable<Instance> instances, String path) {
         List<Object> val = new ArrayList<Object>();
-        for(Instance i : instances) {
+        for (Instance i : instances) {
             Object v = HeapWalker.valueOf(i, path);
             if (v != null) {
                 val.add(v);
@@ -421,18 +421,17 @@ public abstract class BaseHeapTest {
         StringBuilder miss = new StringBuilder();
         StringBuilder extra = new StringBuilder();
 
-        for(Object x: e) {
+        for (Object x : e) {
             if (a.contains(x)) {
                 a.remove(x);
-            }
-            else {
+            } else {
                 if (miss.length() > 0) {
                     miss.append(", ");
                 }
                 miss.append(x);
             }
         }
-        for(Object y: a) {
+        for (Object y : a) {
             if (extra.length() > 0) {
                 extra.append(", ");
             }
@@ -441,50 +440,35 @@ public abstract class BaseHeapTest {
 
         if (miss.length() > 0 || extra.length() > 0) {
             // for better message is IDE
-            Assert.assertEquals("", "Missing: " + miss + " Unexpected: " + extra);;
+            Assert.assertEquals("", "Missing: " + miss + " Unexpected: " + extra);
         }
     }
 
     private static void assertArrayEquals(Object expected, Object actual) {
         if (expected instanceof boolean[]) {
-            assertThat(Arrays.toString((boolean[])actual)).isEqualTo(Arrays.toString((boolean[])expected));
-        }
-        else
-        if (expected instanceof byte[]) {
-            assertThat(Arrays.toString((byte[])actual)).isEqualTo(Arrays.toString((byte[])expected));
-        }
-        else
-        if (expected instanceof short[]) {
-            assertThat(Arrays.toString((short[])actual)).isEqualTo(Arrays.toString((short[])expected));
-        }
-        else
-        if (expected instanceof char[]) {
-            assertThat(Arrays.toString((char[])actual)).isEqualTo(Arrays.toString((char[])expected));
-        }
-        else
-        if (expected instanceof int[]) {
-            assertThat(Arrays.toString((int[])actual)).isEqualTo(Arrays.toString((int[])expected));
-        }
-        else
-        if (expected instanceof long[]) {
-            assertThat(Arrays.toString((long[])actual)).isEqualTo(Arrays.toString((long[])expected));
-        }
-        else
-        if (expected instanceof float[]) {
-            assertThat(Arrays.toString((float[])actual)).isEqualTo(Arrays.toString((float[])expected));
-        }
-        else
-        if (expected instanceof double[]) {
-            assertThat(Arrays.toString((double[])actual)).isEqualTo(Arrays.toString((double[])expected));
-        }
-        else {
+            assertThat(Arrays.toString((boolean[]) actual)).isEqualTo(Arrays.toString((boolean[]) expected));
+        } else if (expected instanceof byte[]) {
+            assertThat(Arrays.toString((byte[]) actual)).isEqualTo(Arrays.toString((byte[]) expected));
+        } else if (expected instanceof short[]) {
+            assertThat(Arrays.toString((short[]) actual)).isEqualTo(Arrays.toString((short[]) expected));
+        } else if (expected instanceof char[]) {
+            assertThat(Arrays.toString((char[]) actual)).isEqualTo(Arrays.toString((char[]) expected));
+        } else if (expected instanceof int[]) {
+            assertThat(Arrays.toString((int[]) actual)).isEqualTo(Arrays.toString((int[]) expected));
+        } else if (expected instanceof long[]) {
+            assertThat(Arrays.toString((long[]) actual)).isEqualTo(Arrays.toString((long[]) expected));
+        } else if (expected instanceof float[]) {
+            assertThat(Arrays.toString((float[]) actual)).isEqualTo(Arrays.toString((float[]) expected));
+        } else if (expected instanceof double[]) {
+            assertThat(Arrays.toString((double[]) actual)).isEqualTo(Arrays.toString((double[]) expected));
+        } else {
             Assertions.fail("Array type expected, but was " + actual);
         }
     }
 
     private Set<String> testSet(String pref, int limit) {
         Set<String> result = new TreeSet<String>();
-        for(int i = 0; i != limit; ++i) {
+        for (int i = 0; i != limit; ++i) {
             result.add(pref + i);
         }
         return result;
