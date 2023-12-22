@@ -5,23 +5,28 @@ import com.github.ol_loginov.heaplibweb.boot_test.DatabaseTest;
 import com.github.ol_loginov.heaplibweb.repository.HeapFile;
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.annotation.Commit;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.nio.file.Path;
-import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {InputLoaderBTest.TestContext.class})
 @Disabled("manual run")
+@Rollback(false)
 public class InputLoaderBTest extends DatabaseTest {
+	@Import(InputLoader.class)
 	public static class TestContext {
 		@Bean
 		@Primary
@@ -47,9 +52,8 @@ public class InputLoaderBTest extends DatabaseTest {
 		when(inputFilesManager.getInputFile(inputFileName)).thenReturn(inputFileDump);
 
 		var heapFile = new HeapFile();
-		heapFile.setId(1);
 		heapFile.setRelativePath(inputFileName);
-		when(heapFileRepository.findById(heapFile.getId())).thenReturn(Optional.of(heapFile));
+		heapFileRepository.save(heapFile);
 
 		var work = inputLoaderProvider.getObject();
 		work.withEntityId(heapFile.getId());

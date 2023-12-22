@@ -10,7 +10,6 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@ToString
 @MappedSuperclass
 public abstract class SequenceIdentity {
 	@Id
@@ -33,5 +32,10 @@ public abstract class SequenceIdentity {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "#" + getId();
 	}
 }

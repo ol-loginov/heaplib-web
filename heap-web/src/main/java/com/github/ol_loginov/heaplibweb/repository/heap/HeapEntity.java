@@ -11,7 +11,6 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "Heap")
 public class HeapEntity extends SequenceIdentity {
