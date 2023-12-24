@@ -4,6 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;
 
+import javax.script.ScriptEngineManager;
+
 @SpringBootApplication()
 @Import({LogicConfig.class, WebConfig.class, RepositoryConfig.class})
 public class Boot {

@@ -20,6 +20,7 @@
     <properties>
         <java.version>17</java.version>
 
+        <hprof-heap.version>0.3-SNAPSHOT</hprof-heap.version>
         <mysql.version>8.2.0</mysql.version>
     </properties>
 
@@ -107,7 +108,17 @@
         <dependency>
             <groupId>org.gridkit.jvmtool</groupId>
             <artifactId>hprof-heap</artifactId>
-            <version>0.3-SNAPSHOT</version>
+            <version>${hprof-heap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gridkit.jvmtool</groupId>
+            <artifactId>hprof-oql-engine</artifactId>
+            <version>${hprof-heap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.4</version>
         </dependency>
 
         <dependency>

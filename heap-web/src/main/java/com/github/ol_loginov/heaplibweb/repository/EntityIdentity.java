@@ -6,12 +6,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Setter
 @MappedSuperclass
-public abstract class SequenceIdentity {
+public abstract class EntityIdentity implements EntityInstance {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
@@ -26,9 +25,9 @@ public abstract class SequenceIdentity {
 		if (this == obj) {
 			return true;
 		}
-		if (obj instanceof SequenceIdentity sequenceIdentity && getClass().equals(obj.getClass())) {
-			if (id > 0 || sequenceIdentity.id > 0) {
-				return id == sequenceIdentity.id;
+		if (obj instanceof EntityIdentity identity && getClass().equals(obj.getClass())) {
+			if (id > 0 || identity.id > 0) {
+				return id == identity.id;
 			}
 		}
 		return false;
@@ -36,6 +35,10 @@ public abstract class SequenceIdentity {
 
 	@Override
 	public String toString() {
+		return idString();
+	}
+
+	public String idString() {
 		return getClass().getSimpleName() + "#" + getId();
 	}
 }

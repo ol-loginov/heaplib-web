@@ -1,5 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services;
 
+import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader;
 import com.github.ol_loginov.heaplibweb.support.DaemonThreadFactory;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;

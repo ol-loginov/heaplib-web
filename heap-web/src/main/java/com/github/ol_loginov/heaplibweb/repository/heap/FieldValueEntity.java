@@ -10,31 +10,29 @@ import lombok.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "JavaClass")
-@IdClass(JavaClassEntity.PK.class)
+@Table(name = "FieldValue")
+@IdClass(FieldValueEntity.PK.class)
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class JavaClassEntity implements EntityInstance {
+public class FieldValueEntity implements EntityInstance {
 	@Data
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class PK implements Serializable {
-		private int heapId;
 		private long javaClassId;
+		private long definingInstanceId;
+		private int fieldId;
 	}
 
 	@Id
-	private int heapId;
-	@Id
 	private long javaClassId;
-
-	private String name;
-	private long allInstancesSize;
-	private boolean array;
-	private int instanceSize;
-	private int instancesCount;
-	private long retainedSizeByClass;
-	private Long superClassId;
+	@Id
+	private long definingInstanceId;
+	@Id
+	private int fieldId;
+	private boolean staticFlag;
+	private String value;
+	private Long valueInstanceId;
 }

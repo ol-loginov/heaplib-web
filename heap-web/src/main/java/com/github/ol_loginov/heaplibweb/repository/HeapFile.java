@@ -10,7 +10,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "HeapFile")
-public class HeapFile extends SequenceIdentity {
+public class HeapFile extends EntityIdentity {
 	@Column(nullable = false)
 	private String relativePath;
 	@Column(nullable = false)

@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @RequestMapping(DashboardController.URL)
 public class DashboardController {
-    public static final String URL = "/";
+	public static final String URL = "/";
 
-    @GetMapping
-    public String showDashboard(Model model) {
-        return "dashboard";
-    }
+	@GetMapping
+	public String showDashboard(Model model) {
+		return "dashboard";
+	}
 }

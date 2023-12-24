@@ -1,9 +1,8 @@
 package com.github.ol_loginov.heaplibweb.boot_test;
 
 import com.github.ol_loginov.heaplibweb.boot.RepositoryConfig;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
-import org.hibernate.SessionFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
@@ -18,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +35,6 @@ public abstract class DatabaseTest {
 		}
 	}
 
-	@Inject
-	protected SessionFactory sessionFactory;
+	@PersistenceContext
+	protected EntityManager entityManager;
 }

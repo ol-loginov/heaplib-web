@@ -4,13 +4,13 @@ import com.github.ol_loginov.heaplibweb.repository.HeapFile;
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository;
 import com.github.ol_loginov.heaplibweb.repository.HeapFileStatus;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionOperations;
 
 import java.io.IOException;

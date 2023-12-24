@@ -1,7 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services.proxies;
 
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity;
-import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntityRepository;
+import com.github.ol_loginov.heaplibweb.repository.heap.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.NotImplementedException;
 import org.netbeans.lib.profiler.heap.*;
@@ -14,7 +13,15 @@ import java.util.Properties;
 @RequiredArgsConstructor
 public class HeapProxy implements Heap {
 	private final HeapEntity entity;
-	private final JavaClassEntityRepository javaClassEntityRepository;
+	private final HeapRepositories heapRepositories;
+
+	protected JavaClassRepository getJavaClasses() {
+		return heapRepositories.getJavaClasses();
+	}
+
+	protected FieldRepository getFields() {
+		return heapRepositories.getFields();
+	}
 
 	@Override
 	public boolean isWriteable() {
@@ -23,78 +30,89 @@ public class HeapProxy implements Heap {
 
 	@Override
 	public List<JavaClass> getAllClasses() {
-		return javaClassEntityRepository.streamAllByHeap(entity)
-			.map(e -> (JavaClass) new JavaClassProxy(e))
+		return getJavaClasses().streamAllByHeapId(entity.getId())
+			.map(this::proxyJavaClass)
+			.toList();
+	}
+
+	private JavaClass proxyJavaClass(JavaClassEntity e) {
+		return new JavaClassProxy(e, heapRepositories);
+	}
+
+	@Override
+	public JavaClass getJavaClassByID(long javaclassId) {
+		return getJavaClasses().findById(new JavaClassEntity.PK(entity.getId(), javaclassId))
+			.map(this::proxyJavaClass)
+			.orElse(null);
+	}
+
+	@Override
+	public JavaClass getJavaClassByName(String fqn) {
+		return getJavaClasses().findByHeapIdAndName(entity.getId(), fqn)
+			.map(this::proxyJavaClass)
+			.orElse(null);
+	}
+
+	@Override
+	public Collection<JavaClass> getJavaClassesByRegExp(String regexp) {
+		return getJavaClasses().findAllByHeapIdAndNameMatches(entity.getId(), regexp)
+			.map(this::proxyJavaClass)
 			.toList();
 	}
 
 	@Override
 	public Iterable<Instance> getAllInstances() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Iterable<Instance> getAllInstances(long instanceID) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public List<Instance> getBiggestObjectsByRetainedSize(int number) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public GCRoot getGCRoot(Instance instance) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Collection<GCRoot> getGCRoots() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Instance getInstanceByID(long instanceId) {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public JavaClass getJavaClassByID(long javaclassId) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public JavaClass getJavaClassByName(String fqn) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public Collection<JavaClass> getJavaClassesByRegExp(String regexp) {
-		throw new NotImplementedException();
-	}
 
 	@Override
 	public Iterator<Instance> getAllInstancesIterator() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public HeapSummary getSummary() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Properties getSystemProperties() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean isRetainedSizeComputed() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean isRetainedSizeByClassComputed() {
-		throw new NotImplementedException();
+		throw new UnsupportedOperationException();
 	}
 }
