@@ -24,7 +24,7 @@ class LoadJavaClasses implements Task {
 
 	@Override
 	public String getText() {
-		return "persist java classes: " + passed + "/" + total;
+		return "import java classes: " + passed + "/" + total;
 	}
 
 	@Override

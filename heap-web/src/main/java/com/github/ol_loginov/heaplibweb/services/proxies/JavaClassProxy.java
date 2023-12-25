@@ -63,8 +63,10 @@ public class JavaClassProxy implements JavaClass {
 
 	@Override
 	public JavaClass getSuperClass() {
-		return Optional.of(new JavaClassEntity.PK(entity.getHeapId(), entity.getSuperClassId()))
-			.flatMap(heapRepositories.getJavaClasses()::findById)
+		if (entity.getSuperClassId() == null) {
+			return null;
+		}
+		return heapRepositories.getJavaClasses().findById(new JavaClassEntity.PK(entity.getHeapId(), entity.getSuperClassId()))
 			.map(this::wrap)
 			.orElse(null);
 	}
@@ -91,22 +93,27 @@ public class JavaClassProxy implements JavaClass {
 	}
 
 	@Override
-	public Instance getClassLoader() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Iterator<Instance> getInstancesIterator() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public List<FieldValue> getStaticFieldValues() {
-		throw new UnsupportedOperationException();
+		return heapRepositories.getFieldValues().streamStaticFieldValues(entity.getJavaClassId())
+			.map(e -> FieldValueProxy.wrap(entity.getHeapId(), e, heapRepositories))
+			.toList();
 	}
 
 	@Override
 	public Object getValueOfStaticField(String name) {
+		return heapRepositories.getFieldValues().findStaticByClassAndFieldName(entity.getJavaClassId(), name)
+			.map(e -> FieldValueProxy.getValueObject(e, entity.getHeapId(), heapRepositories))
+			.orElse(null);
+	}
+
+
+	@Override
+	public Instance getClassLoader() {
+		return (Instance) getValueOfStaticField("<classLoader>");
+	}
+
+	@Override
+	public Iterator<Instance> getInstancesIterator() {
 		throw new UnsupportedOperationException();
 	}
 }

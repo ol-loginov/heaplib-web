@@ -9,6 +9,7 @@ import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepository;
 import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader;
 import com.github.ol_loginov.heaplibweb.services.proxies.HeapProxy;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.when;
 @ContextConfiguration(classes = {InputLoaderBTest.TestContext.class})
 @Disabled("manual run")
 @Rollback(false)
+@Slf4j
 public class InputLoaderBTest extends DatabaseTest {
 	@Import(InputLoader.class)
 	public static class TestContext {
@@ -66,15 +68,21 @@ public class InputLoaderBTest extends DatabaseTest {
 		var work = inputLoaderProvider.getObject();
 		work.withEntityId(heapFile.getId());
 		work.run();
-
-		runSomeOQL(heapFile);
 	}
 
-	private void runSomeOQL(HeapFile heapFile) throws OQLException {
-		var heap = heapRepository.findOneByFile(heapFile).orElseThrow();
+	@Test
+	public void runSomeOQL() throws OQLException {
+		var heap = heapRepository.findAllByOrderByIdDesc().get(0);
 		var heapProxy = new HeapProxy(heap, heapRepositories);
 
 		var oql = new OQLEngine(heapProxy);
+		var printObject = new OQLEngine.ObjectVisitor() {
+			@Override
+			public boolean visit(Object o) {
+				log.info("result: {}", o);
+				return false;
+			}
+		};
 
 		oql.executeQuery("select a from [I a", null);
 		oql.executeQuery("select a from [B a", null);
@@ -84,13 +92,13 @@ public class InputLoaderBTest extends DatabaseTest {
 		oql.executeQuery("select a from [F a", null);
 		oql.executeQuery("select a from [Z a", null);
 
-		oql.executeQuery("select a from [java.lang.String a", null);
+		oql.executeQuery("select a from [java.lang.String a", printObject);
 		oql.executeQuery("select a.count from java.lang.String a", null);
 
-		oql.executeQuery("select map(heap.findClass(\"java.io.File\").fields, 'toHtml(it.name) + \" = \" + toHtml(it.signature)')", null);
-		oql.executeQuery("select map(a.clazz.statics, 'toHtml(it)') from java.lang.String a", null);
+		oql.executeQuery("select map(heap.findClass(\"java.io.File\").fields, 'toHtml(it.name) + \" = \" + toHtml(it.signature)')", printObject);
+		oql.executeQuery("select map(a.clazz.statics, 'toHtml(it)') from java.lang.String a", printObject);
 
-		oql.executeQuery("select heap.forEachClass(function(xxx) { print(xxx.name); print(\"\\n\");})", null);
-		oql.executeQuery("select heap.forEachObject(function(xxx) { print(xxx.id); print(\"\\n\");}, \"java.io.File\")", null);
+		oql.executeQuery("select heap.forEachClass(function(xxx) { print(xxx.name); print(\"\\n\");})", printObject);
+		oql.executeQuery("select heap.forEachObject(function(xxx) { print(xxx.id); print(\"\\n\");}, \"java.io.File\")", printObject);
 	}
 }

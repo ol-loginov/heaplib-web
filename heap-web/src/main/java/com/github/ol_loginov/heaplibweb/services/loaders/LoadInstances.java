@@ -36,7 +36,7 @@ class LoadInstances implements Task {
 
 	@Override
 	public String getText() {
-		return "persist instances: " + passed + "/" + total + " (instances=" + instancesLoaded.get() + ", fields=" + fieldsLoaded.get() + ")";
+		return "import instances: " + passed + "/" + total + " (instances=" + instancesLoaded.get() + ", fields=" + fieldsLoaded.get() + ")";
 	}
 
 	@Override

@@ -8,6 +8,8 @@ import org.netbeans.lib.profiler.heap.Field;
 import org.netbeans.lib.profiler.heap.FieldValue;
 import org.netbeans.lib.profiler.heap.Instance;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 public class FieldValueProxy implements FieldValue {
 	protected final int heapId;
@@ -20,9 +22,31 @@ public class FieldValueProxy implements FieldValue {
 			: new ObjectFieldValueProxy(heapId, entity, heapRepositories);
 	}
 
+	public static Object getValueObject(FieldValueEntity fieldValue, int heapId, HeapRepositories heapRepositories) {
+		var fieldEntity = heapRepositories.getFields().findById(fieldValue.getFieldId()).orElseThrow();
+		var typeEntity = heapRepositories.getTypes().findById(fieldEntity.getTypeId()).orElseThrow();
+
+		return switch (typeEntity.getName()) {
+			case "object" -> Optional
+				.ofNullable(fieldValue.getValueInstanceId())
+				.flatMap(instanceId -> heapRepositories.getInstances().findById(new InstanceEntity.PK(heapId, fieldValue.getValueInstanceId())))
+				.map(instanceEntity -> InstanceProxy.wrap(instanceEntity, heapRepositories))
+				.orElse(null);
+			case "boolean" -> !"0".equals(fieldValue.getValue());
+			case "byte" -> Byte.parseByte(fieldValue.getValue());
+			case "short" -> Short.parseShort(fieldValue.getValue());
+			case "int" -> Integer.parseInt(fieldValue.getValue());
+			case "long" -> Long.parseLong(fieldValue.getValue());
+			case "char" -> fieldValue.getValue().charAt(0);
+			case "float" -> Float.parseFloat(fieldValue.getValue());
+			case "double" -> Double.parseDouble(fieldValue.getValue());
+			default -> throw new IllegalStateException(typeEntity.getName() + " is not supported");
+		};
+	}
+
 	@Override
 	public Field getField() {
-		throw new UnsupportedOperationException();
+		return new FieldProxy(heapRepositories.getFields().findById(entity.getFieldId()).orElseThrow(), heapRepositories);
 	}
 
 	@Override

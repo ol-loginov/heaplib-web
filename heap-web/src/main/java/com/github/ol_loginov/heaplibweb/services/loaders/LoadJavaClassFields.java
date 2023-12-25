@@ -27,7 +27,7 @@ class LoadJavaClassFields implements Task {
 
 	@Override
 	public String getText() {
-		return "persist class fields: " + passed + "/" + total + " (fields=" + fieldsLoaded.get() + ")";
+		return "import class fields: " + passed + "/" + total + " (fields=" + fieldsLoaded.get() + ")";
 	}
 
 	@Override

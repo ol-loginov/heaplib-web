@@ -11,6 +11,7 @@ import org.netbeans.lib.profiler.heap.JavaClass;
 import org.netbeans.lib.profiler.heap.Value;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class InstanceProxy implements Instance {
 
 	@Override
 	public List<FieldValue> getFieldValues() {
-		return heapRepositories.getFieldValues().streamByDefiningInstanceId(entity.getInstanceId())
+		return heapRepositories.getFieldValues().streamInstanceFieldValues(entity.getInstanceId())
 			.map(e -> FieldValueProxy.wrap(entity.getHeapId(), e, heapRepositories))
 			.toList();
 	}
@@ -74,20 +75,7 @@ public class InstanceProxy implements Instance {
 		if (fieldValueEntity == null) {
 			return null;
 		}
-		var fieldEntity = heapRepositories.getFields().findById(fieldValueEntity.getFieldId()).orElseThrow();
-		var typeEntity = heapRepositories.getTypes().findById(fieldEntity.getTypeId()).orElseThrow();
-
-		return switch (typeEntity.getName()) {
-			case "object" -> Optional
-				.ofNullable(fieldValueEntity.getValueInstanceId())
-				.flatMap(instanceId -> heapRepositories.getInstances().findById(new InstanceEntity.PK(entity.getHeapId(), fieldValueEntity.getValueInstanceId())))
-				.map(instanceEntity -> wrap(instanceEntity, heapRepositories))
-				.orElseThrow();
-			case "byte" -> Byte.parseByte(fieldValueEntity.getValue());
-			case "int" -> Integer.parseInt(fieldValueEntity.getValue());
-			case "long" -> Long.parseLong(fieldValueEntity.getValue());
-			default -> throw new IllegalStateException(typeEntity.getName() + " is not supported");
-		};
+		return FieldValueProxy.getValueObject(fieldValueEntity, entity.getHeapId(), heapRepositories);
 	}
 
 	@Override
@@ -103,5 +91,10 @@ public class InstanceProxy implements Instance {
 	@Override
 	public List<FieldValue> getStaticFieldValues() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "#" + entity.getInstanceId();
 	}
 }
