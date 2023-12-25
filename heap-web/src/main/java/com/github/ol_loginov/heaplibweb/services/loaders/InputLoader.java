@@ -106,7 +106,7 @@ public class InputLoader implements Runnable, Task.Callback {
 
 		runStep(new LoadJavaClasses(heap, heapEntity, transactionOperations, heapRepositories));
 		runStep(new LoadJavaClassFields(heap, heapEntity, transactionOperations, heapRepositories, typeIdLookup));
-		runStep(new LoadInstances(heap, heapEntity, transactionOperations, heapRepositories, typeIdLookup));
+		runStep(new LoadInstances( heap, heapEntity, transactionOperations, heapRepositories, typeIdLookup));
 	}
 
 	private void runStep(Task task) {

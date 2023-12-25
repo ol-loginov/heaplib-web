@@ -11,6 +11,8 @@ import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader;
 import com.github.ol_loginov.heaplibweb.services.proxies.HeapProxy;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +26,8 @@ import org.springframework.test.context.ContextConfiguration;
 
 import javax.script.ScriptEngineManager;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +66,18 @@ public class OQLEngineTest extends DatabaseTest {
 	private InputFilesManager inputFilesManager;
 	@Inject
 	private ObjectProvider<InputLoader> inputLoaderProvider;
+
+	private Instant startTime;
+
+	@BeforeEach
+	public void startTIme() {
+		startTime = Instant.now();
+	}
+
+	@AfterEach
+	public void endTime() {
+		log.info("test complete in {} secs", Duration.between(startTime, Instant.now()).toSeconds());
+	}
 
 	@Test
 	public void loadData() {

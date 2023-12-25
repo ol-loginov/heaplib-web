@@ -8,7 +8,9 @@ import org.netbeans.lib.profiler.heap.Heap;
 import org.netbeans.lib.profiler.heap.JavaClass;
 import org.springframework.transaction.support.TransactionOperations;
 
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 class LoadJavaClassFields implements Task {
@@ -25,7 +27,7 @@ class LoadJavaClassFields implements Task {
 
 	@Override
 	public String getText() {
-		return "persist fields: " + passed + "/" + total + " (fields=" + fieldsLoaded.get() + ")";
+		return "persist class fields: " + passed + "/" + total + " (fields=" + fieldsLoaded.get() + ")";
 	}
 
 	@Override
@@ -35,22 +37,58 @@ class LoadJavaClassFields implements Task {
 		passed.set(0);
 		callback.saveProgress(this, true);
 
+		var persister = new Persister();
+
 		all.forEach(clazz -> transactionOperations.executeWithoutResult(st -> {
-			persistJavaClassFields(heapEntity, clazz, typeIdLookup);
+			persistJavaClassFields(heapEntity, clazz, typeIdLookup, persister);
 			passed.incrementAndGet();
 			callback.saveProgress(this);
 		}));
+
+		persister.batchInsert(true);
 	}
 
-	private void persistJavaClassFields(HeapEntity heapEntity, JavaClass clazz, TypeIdLookup nameLookup) {
+	private void persistJavaClassFields(HeapEntity heapEntity, JavaClass clazz, TypeIdLookup nameLookup, Consumer<FieldEntity> fieldEntityConsumer) {
 		for (var field : clazz.getFields()) {
 			fieldsLoaded.incrementAndGet();
-
-			var fieldEntity = new FieldEntity(heapEntity.getId(), clazz.getJavaClassId(),
+			fieldEntityConsumer.accept(new FieldEntity(heapEntity.getId(), clazz.getJavaClassId(),
 				field.getName(), field.isStatic(),
-				nameLookup.lookupTypeId(field.getType().getName()));
-			heapRepositories.persist(fieldEntity);
+				nameLookup.lookupTypeId(field.getType().getName())));
 		}
-		heapRepositories.flush();
+
+		for (var fieldValue : clazz.getStaticFieldValues()) {
+			fieldsLoaded.incrementAndGet();
+			var field = fieldValue.getField();
+			fieldEntityConsumer.accept(new FieldEntity(heapEntity.getId(), field.getDeclaringClass().getJavaClassId(),
+				field.getName(), field.isStatic(),
+				nameLookup.lookupTypeId(field.getType().getName())));
+		}
 	}
+
+	@RequiredArgsConstructor
+	class Persister implements Consumer<FieldEntity> {
+		private ArrayList<FieldEntity> batch = new ArrayList<>();
+
+		@Override
+		public void accept(FieldEntity fieldEntity) {
+			batch.add(fieldEntity);
+			batchInsert(false);
+		}
+
+		private void batchInsert(boolean force) {
+			if (!force && batch.size() < 1000) {
+				return;
+			}
+
+			heapRepositories.getJdbc().batchUpdate("insert into Field(heapId,declaringClassId,name,staticFlag,typeId) values(?,?,?,?,?)", batch, 100, (ps, entity) -> {
+				ps.setInt(1, entity.getHeapId());
+				ps.setLong(2, entity.getDeclaringClassId());
+				ps.setString(3, entity.getName());
+				ps.setBoolean(4, entity.isStaticFlag());
+				ps.setInt(5, entity.getTypeId());
+			});
+			batch = new ArrayList<>();
+		}
+	}
+
 }

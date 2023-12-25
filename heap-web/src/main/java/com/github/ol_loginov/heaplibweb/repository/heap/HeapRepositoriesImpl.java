@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Repository;
 class HeapRepositoriesImpl implements HeapRepositories {
 	@PersistenceContext
 	private EntityManager entityManager;
+	@Getter
+	private final JdbcTemplate jdbc;
 	@Getter
 	private final JavaClassRepository javaClasses;
 	@Getter
