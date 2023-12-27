@@ -14,3 +14,5 @@ node_modules/
 /docker/config/
 
 *-local.yaml
+
+*.hwcache

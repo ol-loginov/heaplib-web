@@ -48,13 +48,15 @@ class LoadInstances implements Task {
 		total = allClasses.size();
 		callback.saveProgress(this, true);
 
-		transactionOperations.executeWithoutResult(st -> {
-			var instanceBatchInsert = new InstanceBatchInsert();
-			allClasses.forEach(clazz -> {
+		var instanceBatchInsert = new InstanceBatchInsert();
+		allClasses.forEach(clazz -> {
+			transactionOperations.executeWithoutResult(st -> {
 				persistInstances(heapEntity, clazz, instanceBatchInsert);
 				passed.incrementAndGet();
 				callback.saveProgress(this);
 			});
+		});
+		transactionOperations.executeWithoutResult(st -> {
 			instanceBatchInsert.batchInsert(true);
 		});
 

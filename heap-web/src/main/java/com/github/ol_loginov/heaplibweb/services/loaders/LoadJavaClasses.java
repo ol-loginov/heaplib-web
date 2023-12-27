@@ -5,6 +5,7 @@ import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity;
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories;
 import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.netbeans.lib.profiler.heap.Heap;
 import org.netbeans.lib.profiler.heap.JavaClass;
 import org.springframework.transaction.support.TransactionOperations;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RequiredArgsConstructor
+@Slf4j
 class LoadJavaClasses implements Task {
 	private final Heap heap;
 	private final HeapEntity heapEntity;
@@ -42,6 +44,7 @@ class LoadJavaClasses implements Task {
 	}
 
 	private void persistJavaClass(HeapEntity heapEntity, JavaClass clazz) {
+		log.info("{}", clazz.getName());
 		var clazzEntity = new JavaClassEntity(
 			heapEntity.getId(), clazz.getJavaClassId(),
 			clazz.getName(),

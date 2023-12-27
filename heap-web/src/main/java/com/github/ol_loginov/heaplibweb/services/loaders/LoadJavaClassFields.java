@@ -45,7 +45,9 @@ class LoadJavaClassFields implements Task {
 			callback.saveProgress(this);
 		}));
 
-		persister.batchInsert(true);
+		transactionOperations.executeWithoutResult(st ->
+			persister.batchInsert(true)
+		);
 	}
 
 	private void persistJavaClassFields(HeapEntity heapEntity, JavaClass clazz, TypeIdLookup nameLookup, Consumer<FieldEntity> fieldEntityConsumer) {

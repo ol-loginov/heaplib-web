@@ -1,8 +1,9 @@
 package com.github.ol_loginov.heaplibweb.services.proxies;
 
-import com.github.ol_loginov.heaplibweb.repository.heap.*;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope;
+import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.NotImplementedException;
 import org.netbeans.lib.profiler.heap.*;
 
 import java.util.Collection;
@@ -13,15 +14,7 @@ import java.util.Properties;
 @RequiredArgsConstructor
 public class HeapProxy implements Heap {
 	private final HeapEntity entity;
-	private final HeapRepositories heapRepositories;
-
-	protected JavaClassRepository getJavaClasses() {
-		return heapRepositories.getJavaClasses();
-	}
-
-	protected FieldRepository getFields() {
-		return heapRepositories.getFields();
-	}
+	private final HeapScope scope;
 
 	@Override
 	public boolean isWriteable() {
@@ -30,32 +23,32 @@ public class HeapProxy implements Heap {
 
 	@Override
 	public List<JavaClass> getAllClasses() {
-		return getJavaClasses().streamAllByHeapId(entity.getId())
+		return scope.getJavaClasses().streamAllByHeapId(entity.getId())
 			.map(this::proxyJavaClass)
 			.toList();
 	}
 
 	private JavaClass proxyJavaClass(JavaClassEntity e) {
-		return new JavaClassProxy(e, heapRepositories);
+		return new JavaClassProxy(e, scope);
 	}
 
 	@Override
 	public JavaClass getJavaClassByID(long javaclassId) {
-		return getJavaClasses().findById(new JavaClassEntity.PK(entity.getId(), javaclassId))
+		return scope.getJavaClasses().findById(new JavaClassEntity.PK(entity.getId(), javaclassId))
 			.map(this::proxyJavaClass)
 			.orElse(null);
 	}
 
 	@Override
 	public JavaClass getJavaClassByName(String fqn) {
-		return getJavaClasses().findByHeapIdAndName(entity.getId(), fqn)
+		return scope.getJavaClasses().findByHeapIdAndName(entity.getId(), fqn)
 			.map(this::proxyJavaClass)
 			.orElse(null);
 	}
 
 	@Override
 	public Collection<JavaClass> getJavaClassesByRegExp(String regexp) {
-		return getJavaClasses().findAllByHeapIdAndNameMatches(entity.getId(), regexp)
+		return scope.getJavaClasses().findAllByHeapIdAndNameMatches(entity.getId(), regexp)
 			.map(this::proxyJavaClass)
 			.toList();
 	}

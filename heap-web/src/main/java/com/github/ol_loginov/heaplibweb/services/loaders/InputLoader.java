@@ -1,17 +1,15 @@
 package com.github.ol_loginov.heaplibweb.services.loaders;
 
-import com.github.ol_loginov.heaplibweb.repository.EntityIdentity;
 import com.github.ol_loginov.heaplibweb.repository.HeapFile;
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository;
 import com.github.ol_loginov.heaplibweb.repository.HeapFileStatus;
-import com.github.ol_loginov.heaplibweb.repository.heap.*;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepository;
 import com.github.ol_loginov.heaplibweb.services.InputFilesManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.netbeans.lib.profiler.heap.Field;
 import org.netbeans.lib.profiler.heap.HeapFactory2;
-import org.netbeans.lib.profiler.heap.JavaClass;
-import org.netbeans.lib.profiler.heap.ObjectFieldValue;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -20,12 +18,29 @@ import org.springframework.transaction.support.TransactionOperations;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
-import static com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories.NUMBER_NOT_READY;
-
+/**
+ * @see org.netbeans.lib.profiler.heap.Value
+ * @see org.netbeans.lib.profiler.heap.FieldValue
+ * @see org.netbeans.lib.profiler.heap.ObjectFieldValue
+ * @see org.netbeans.lib.profiler.heap.ArrayItemValue
+ * <p/>
+ * @see org.netbeans.lib.profiler.heap.GCRoot
+ * @see org.netbeans.lib.profiler.heap.ThreadObjectGCRoot
+ * @see org.netbeans.lib.profiler.heap.JavaFrameGCRoot
+ * <p/>
+ * @see org.netbeans.lib.profiler.heap.Instance
+ * @see org.netbeans.lib.profiler.heap.ObjectArrayInstance
+ * @see org.netbeans.lib.profiler.heap.PrimitiveArrayInstance
+ * <p/>
+ * @see org.netbeans.lib.profiler.heap.Type
+ * @see org.netbeans.lib.profiler.heap.JavaClass
+ * @see org.netbeans.lib.profiler.heap.PrimitiveType
+ * <p/>
+ * @see org.netbeans.lib.profiler.heap.Field
+ * @see org.netbeans.lib.profiler.heap.Heap
+ * @see org.netbeans.lib.profiler.heap.HeapSummary
+ */
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -106,7 +121,7 @@ public class InputLoader implements Runnable, Task.Callback {
 
 		runStep(new LoadJavaClasses(heap, heapEntity, transactionOperations, heapRepositories));
 		runStep(new LoadJavaClassFields(heap, heapEntity, transactionOperations, heapRepositories, typeIdLookup));
-		runStep(new LoadInstances( heap, heapEntity, transactionOperations, heapRepositories, typeIdLookup));
+		runStep(new LoadInstances(heap, heapEntity, transactionOperations, heapRepositories, typeIdLookup));
 	}
 
 	private void runStep(Task task) {

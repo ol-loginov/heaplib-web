@@ -40,17 +40,6 @@ spring:
   #------------------------------------------------------------------------------------------------------------------------
   # spring configuration of database
   #------------------------------------------------------------------------------------------------------------------------
-  jpa:
-    open-in-view: false
-    hibernate:
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    properties:
-      hibernate:
-        query:
-          plan_cache_max_size: 64 #https://stackoverflow.com/questions/31557076/spring-hibernate-query-plan-cache-memory-usage
-          plan_parameter_metadata_max_size: 32 #https://stackoverflow.com/questions/31557076/spring-hibernate-query-plan-cache-memory-usage
-  
   datasource:
     url: ${app.database.url}
     username: ${app.database.user}

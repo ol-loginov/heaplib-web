@@ -1,7 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services.proxies;
 
-import com.github.ol_loginov.heaplibweb.repository.heap.FieldValueEntity;
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope;
 import com.github.ol_loginov.heaplibweb.repository.heap.InstanceEntity;
 import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity;
 import lombok.RequiredArgsConstructor;
@@ -11,22 +10,20 @@ import org.netbeans.lib.profiler.heap.JavaClass;
 import org.netbeans.lib.profiler.heap.Value;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 public class InstanceProxy implements Instance {
 	private final InstanceEntity entity;
-	private final HeapRepositories heapRepositories;
+	private final HeapScope scope;
 
-	public static Instance wrap(InstanceEntity entity, HeapRepositories heapRepositories) {
-		return new InstanceProxy(entity, heapRepositories);
+	public static Instance wrap(InstanceEntity entity, HeapScope scope) {
+		return new InstanceProxy(entity, scope);
 	}
 
 	@Override
 	public List<FieldValue> getFieldValues() {
-		return heapRepositories.getFieldValues().streamInstanceFieldValues(entity.getInstanceId())
-			.map(e -> FieldValueProxy.wrap(entity.getHeapId(), e, heapRepositories))
+		return scope.getFieldValues().streamInstanceFieldValues(entity.getInstanceId())
+			.map(e -> FieldValueProxy.wrap(entity.getHeapId(), e, scope))
 			.toList();
 	}
 
@@ -42,13 +39,13 @@ public class InstanceProxy implements Instance {
 
 	@Override
 	public int getInstanceNumber() {
-		return HeapRepositories.shouldBeReady(entity.getInstanceNumber());
+		return HeapScope.shouldBeReady(entity.getInstanceNumber());
 	}
 
 	@Override
 	public JavaClass getJavaClass() {
-		return heapRepositories.getJavaClasses().findById(new JavaClassEntity.PK(entity.getHeapId(), entity.getJavaClassId()))
-			.map(e -> (JavaClass) new JavaClassProxy(e, heapRepositories))
+		return scope.getJavaClasses().findById(new JavaClassEntity.PK(entity.getHeapId(), entity.getJavaClassId()))
+			.map(e -> (JavaClass) new JavaClassProxy(e, scope))
 			.orElse(null);
 	}
 
@@ -59,23 +56,23 @@ public class InstanceProxy implements Instance {
 
 	@Override
 	public long getReachableSize() {
-		return HeapRepositories.shouldBeReady(entity.getReachableSize());
+		return HeapScope.shouldBeReady(entity.getReachableSize());
 	}
 
 	@Override
 	public long getRetainedSize() {
-		return HeapRepositories.shouldBeReady(entity.getRetainedSize());
+		return HeapScope.shouldBeReady(entity.getRetainedSize());
 	}
 
 	@Override
 	public Object getValueOfField(String name) {
-		var fieldValueEntity = heapRepositories.getFieldValues()
+		var fieldValueEntity = scope.getFieldValues()
 			.findOneByInstanceAndFieldName(entity.getInstanceId(), name)
 			.orElse(null);
 		if (fieldValueEntity == null) {
 			return null;
 		}
-		return FieldValueProxy.getValueObject(fieldValueEntity, entity.getHeapId(), heapRepositories);
+		return FieldValueProxy.getValueObject(fieldValueEntity, entity.getHeapId(), scope);
 	}
 
 	@Override

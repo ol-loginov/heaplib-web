@@ -1,6 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services.proxies;
 
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope;
 import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity;
 import lombok.RequiredArgsConstructor;
 import org.netbeans.lib.profiler.heap.Field;
@@ -11,19 +11,18 @@ import org.netbeans.lib.profiler.heap.JavaClass;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 public class JavaClassProxy implements JavaClass {
 	private final JavaClassEntity entity;
-	private final HeapRepositories heapRepositories;
+	private final HeapScope scope;
 
-	public static JavaClass wrap(JavaClassEntity other, HeapRepositories heapRepositories) {
-		return new JavaClassProxy(other, heapRepositories);
+	public static JavaClass wrap(JavaClassEntity other, HeapScope scope) {
+		return new JavaClassProxy(other, scope);
 	}
 
 	private JavaClass wrap(JavaClassEntity other) {
-		return wrap(other, heapRepositories);
+		return wrap(other, scope);
 	}
 
 	@Override
@@ -53,7 +52,7 @@ public class JavaClassProxy implements JavaClass {
 
 	@Override
 	public long getRetainedSizeByClass() {
-		return HeapRepositories.shouldBeReady(entity.getRetainedSizeByClass());
+		return HeapScope.shouldBeReady(entity.getRetainedSizeByClass());
 	}
 
 	@Override
@@ -66,43 +65,43 @@ public class JavaClassProxy implements JavaClass {
 		if (entity.getSuperClassId() == null) {
 			return null;
 		}
-		return heapRepositories.getJavaClasses().findById(new JavaClassEntity.PK(entity.getHeapId(), entity.getSuperClassId()))
+		return scope.getJavaClasses().findById(new JavaClassEntity.PK(entity.getHeapId(), entity.getSuperClassId()))
 			.map(this::wrap)
 			.orElse(null);
 	}
 
 	@Override
 	public Collection<JavaClass> getSubClasses() {
-		return heapRepositories.getJavaClasses().streamAllByHeapIdAndSuperClassId(entity.getHeapId(), entity.getJavaClassId())
+		return scope.getJavaClasses().streamAllByHeapIdAndSuperClassId(entity.getHeapId(), entity.getJavaClassId())
 			.map(this::wrap)
 			.toList();
 	}
 
 	@Override
 	public List<Field> getFields() {
-		return heapRepositories.getFields().streamAllByHeapIdAndDeclaringClassId(entity.getHeapId(), entity.getJavaClassId())
-			.map(e -> (Field) new FieldProxy(e, heapRepositories))
+		return scope.getFields().streamAllByHeapIdAndDeclaringClassId(entity.getHeapId(), entity.getJavaClassId())
+			.map(e -> (Field) new FieldProxy(e, scope))
 			.toList();
 	}
 
 	@Override
 	public List<Instance> getInstances() {
-		return heapRepositories.getInstances().streamAllByHeapIdAndJavaClassId(entity.getHeapId(), entity.getJavaClassId())
-			.map(e -> InstanceProxy.wrap(e, heapRepositories))
+		return scope.getInstances().streamAllByHeapIdAndJavaClassId(entity.getHeapId(), entity.getJavaClassId())
+			.map(e -> InstanceProxy.wrap(e, scope))
 			.toList();
 	}
 
 	@Override
 	public List<FieldValue> getStaticFieldValues() {
-		return heapRepositories.getFieldValues().streamStaticFieldValues(entity.getJavaClassId())
-			.map(e -> FieldValueProxy.wrap(entity.getHeapId(), e, heapRepositories))
+		return scope.getFieldValues().streamStaticFieldValues(entity.getJavaClassId())
+			.map(e -> FieldValueProxy.wrap(entity.getHeapId(), e, scope))
 			.toList();
 	}
 
 	@Override
 	public Object getValueOfStaticField(String name) {
-		return heapRepositories.getFieldValues().findStaticByClassAndFieldName(entity.getJavaClassId(), name)
-			.map(e -> FieldValueProxy.getValueObject(e, entity.getHeapId(), heapRepositories))
+		return scope.getFieldValues().findStaticByClassAndFieldName(entity.getJavaClassId(), name)
+			.map(e -> FieldValueProxy.getValueObject(e, entity.getHeapId(), scope))
 			.orElse(null);
 	}
 

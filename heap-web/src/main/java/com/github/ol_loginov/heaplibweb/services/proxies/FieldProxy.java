@@ -1,7 +1,7 @@
 package com.github.ol_loginov.heaplibweb.services.proxies;
 
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity;
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories;
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope;
 import lombok.RequiredArgsConstructor;
 import org.netbeans.lib.profiler.heap.Field;
 import org.netbeans.lib.profiler.heap.JavaClass;
@@ -10,7 +10,7 @@ import org.netbeans.lib.profiler.heap.Type;
 @RequiredArgsConstructor
 public class FieldProxy implements Field {
 	private final FieldEntity entity;
-	private final HeapRepositories heapRepositories;
+	private final HeapScope scope;
 
 	@Override
 	public JavaClass getDeclaringClass() {
@@ -24,12 +24,12 @@ public class FieldProxy implements Field {
 
 	@Override
 	public boolean isStatic() {
-		return entity.isStaticFlag();
+		return entity.getStaticFlag();
 	}
 
 	@Override
 	public Type getType() {
-		return heapRepositories.getTypes().findById(entity.getTypeId())
+		return scope.getTypes().findById(entity.getTypeId())
 			.map(e -> (Type) new TypeProxy(e))
 			.orElse(null);
 	}
