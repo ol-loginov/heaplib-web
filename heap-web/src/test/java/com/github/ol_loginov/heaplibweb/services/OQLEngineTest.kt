@@ -1,6 +1,7 @@
 package com.github.ol_loginov.heaplibweb.services
 
 import com.github.ol_loginov.heaplibweb.TestTool
+import com.github.ol_loginov.heaplibweb.TestTool._when
 import com.github.ol_loginov.heaplibweb.boot_test.DatabaseTest
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
@@ -13,8 +14,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import org.mockito.Mockito
 import org.netbeans.lib.profiler.heap.FastHprofHeap
 import org.netbeans.lib.profiler.heap.Instance
 import org.netbeans.lib.profiler.heap.JavaClass
@@ -23,7 +22,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ContextConfiguration
-import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -45,15 +43,15 @@ class OQLEngineTest : DatabaseTest() {
 
     private lateinit var instance: OQLEngineForTest
 
-    @TempDir
-    private val tempDir: Path? = null
-
     @Inject
     private lateinit var heapFileRepository: HeapFileRepository
+
     @Inject
     private lateinit var heapRepository: HeapRepository
+
     @Inject
     private lateinit var inputFilesManager: InputFilesManager
+
     @Inject
     private lateinit var inputLoaderProvider: ObjectProvider<InputLoader>
 
@@ -71,10 +69,8 @@ class OQLEngineTest : DatabaseTest() {
 
     @Test
     fun loadData() {
-        val inputFileName = "1703107559883.hprof"
-        val inputFileDump = tempDir!!.resolve(inputFileName)
-        TestTool.copyResourceTo("heapdumps/remote-jdbc-1703107559883.sanitized.hprof", inputFileDump)
-        Mockito.`when`(inputFilesManager.getInputFile(inputFileName)).thenReturn(inputFileDump)
+        val inputFileName = "heapdumps/remote-jdbc-1703107559883.sanitized.hprof"
+        _when(inputFilesManager.resolveInputFilePath(inputFileName)).thenReturn(TestTool.getResourceFile(inputFileName).toPath())
 
         val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
         val work = inputLoaderProvider.getObject()
@@ -86,7 +82,7 @@ class OQLEngineTest : DatabaseTest() {
 
     fun testSuite() {
         val heap = heapRepository.findAllOrderByIdDesc().first()
-        val heapProxy = HeapProxy(heapRepository.createScope(heap))
+        val heapProxy = HeapProxy(heapRepository.getScope(heap))
 
         instance = OQLEngineForTest(heapProxy)
         log.info("testAltTypeNames")

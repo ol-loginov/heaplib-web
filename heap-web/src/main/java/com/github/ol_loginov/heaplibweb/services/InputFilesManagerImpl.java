@@ -16,8 +16,9 @@ import org.springframework.transaction.support.TransactionOperations;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,8 +53,8 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
 	}
 
 	@Override
-	public Path getInputFile(String relativePath) {
-		return inputFilesFolder.resolve(relativePath);
+	public Path resolveInputFilePath(String path) {
+		return Paths.get(path);
 	}
 
 	@Transactional
@@ -61,7 +62,7 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
 	public List<InputFile> listInputFiles() throws IOException {
 		var ignoreFiles = heapFileRepository.findAllByStatusNotIn(List.of(HeapFileStatus.LOADED, HeapFileStatus.LOADING_ERROR))
 			.stream()
-			.map(HeapFile::getRelativePath)
+			.map(HeapFile::getPath)
 			.collect(Collectors.toSet());
 
 		try (var stream = Files.list(inputFilesFolder)) {
@@ -94,17 +95,17 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
 	}
 
 	@Override
-	public void createLoad(String relativePath) {
-		var targetFile = this.inputFilesFolder.resolve(relativePath);
+	public void createLoad(String path) {
+		var targetFile = Paths.get(path);
 		if (!targetFile.toFile().exists() || !targetFile.toFile().isFile() || !targetFile.toFile().canRead()) {
 			throw new IllegalArgumentException("not a valid file: " + targetFile);
 		}
 
 		var load = transactionOperations.execute(st -> {
-			var entity = new HeapFile(relativePath);
-			entity.setLoadStart(Instant.now());
+			var entity = new HeapFile(path);
+			entity.setLoadStart(ZonedDateTime.now());
 			entity.setStatus(HeapFileStatus.PENDING);
-			entity.setRelativePath(relativePath);
+			entity.setPath(targetFile.toAbsolutePath().toString());
 			return heapFileRepository.persist(entity);
 		});
 		if (load == null) {

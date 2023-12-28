@@ -10,7 +10,7 @@ class ObjectFieldValueProxy(
     scope: HeapScope
 ) : FieldValueProxy(entity, scope), ObjectFieldValue {
     override fun getInstance(): Instance? = scope
-        .instances.findById(entity.definingInstanceId)
+        .instances.findById(entity.valueInstanceId)
         ?.let { InstanceProxy(it, scope) }
 
     override fun getInstanceId(): Long = entity.valueInstanceId

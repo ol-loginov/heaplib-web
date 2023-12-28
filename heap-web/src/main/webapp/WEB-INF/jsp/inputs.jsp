@@ -28,7 +28,7 @@
                                     <td>${inputLoad.id}</td>
                                     <td class="text-start"><small><em>${inputLoad.status}</em></small></td>
                                     <td>
-                                        <span>${h.h(inputLoad.relativePath)}</span>
+                                        <span>${h.h(inputLoad.path)}</span>
                                         <c:if test="${not empty inputLoad.loadError}">
                                             <div class="text-danger ">
                                                 <small>${h.h(inputLoad.loadError)}</small>
@@ -71,7 +71,7 @@
                                 <td class="text-end">${inputFile.size}</td>
                                 <td class="text-end">
                                     <form method="post" action="${cp}/inputs/load">
-                                        <input type="hidden" name="relativePath" value="${h.h(inputFile.path)}"/>
+                                        <input type="hidden" name="path" value="${h.h(inputFile.path)}"/>
                                         <button type="submit" class="btn btn-primary">Load &amp; Analyze</button>
                                     </form>
                                 </td>

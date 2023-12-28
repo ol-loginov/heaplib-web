@@ -32,8 +32,8 @@ public class InputFilesController {
 	}
 
 	@PostMapping("/load")
-	public String loadRelativeFIle(@RequestParam String relativePath) {
-		inputFilesManager.createLoad(relativePath);
+	public String loadRelativeFIle(@RequestParam String path) {
+		inputFilesManager.createLoad(path);
 		return UrlBasedViewResolver.REDIRECT_URL_PREFIX + URL;
 	}
 }

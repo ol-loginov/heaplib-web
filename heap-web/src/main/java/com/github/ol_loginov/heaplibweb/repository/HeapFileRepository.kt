@@ -12,5 +12,5 @@ interface HeapFileRepository {
 
     fun findAllByStatusNotIn(statuses: List<HeapFileStatus>): List<HeapFile>
 
-    fun findFirstByRelativePathOrderByIdDesc(relativePath: String): HeapFile?
+    fun findFirstByPathOrderByIdDesc(path: String): HeapFile?
 }

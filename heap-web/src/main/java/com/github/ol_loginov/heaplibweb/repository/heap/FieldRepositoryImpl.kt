@@ -1,5 +1,6 @@
 package com.github.ol_loginov.heaplibweb.repository.heap
 
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import java.util.stream.Stream
 
@@ -19,7 +20,17 @@ internal class FieldRepositoryImpl(
     }
 
     override fun persistAll(batch: List<FieldEntity>) {
-        batch.forEach { persist(it) }
+        val batchParameters = batch.map {
+            MapSqlParameterSource(
+                mapOf(
+                    "declaringClassId" to it.declaringClassId,
+                    "name" to it.name,
+                    "staticFlag" to it.staticFlag,
+                    "typeId" to it.typeId
+                )
+            )
+        }
+        jdbc.batchUpdate("insert into Field(declaringClassId, name, staticFlag, typeId) values(:declaringClassId, :name, :staticFlag, :typeId)", batchParameters)
     }
 
     override fun findById(id: Int): FieldEntity? = jdbc

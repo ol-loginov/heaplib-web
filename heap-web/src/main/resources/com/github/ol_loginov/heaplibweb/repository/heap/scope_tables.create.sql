@@ -1,12 +1,6 @@
-drop table if exists FieldValue;
-drop table if exists Field;
-drop table if exists Instance;
-drop table if exists JavaClass;
-drop table if exists Type;
-
 create table JavaClass
 (
-    javaClassId         bigint       not null,
+    javaClassId         bigint       not null primary key,
     name                varchar(512) not null,
     allInstancesSize    bigint       not null,
     array               bit(1)       not null,
@@ -14,7 +8,6 @@ create table JavaClass
     instancesCount      int          not null,
     retainedSizeByClass bigint       not null,
     superClassId        bigint,
-    primary key JavaClass_PK (javaClassId),
     unique JavaClass_IX_HIN (name)
 ) engine InnoDB;
 
@@ -44,8 +37,8 @@ create table Instance
     javaClassId    bigint not null,
     gcRoot         bit(1) not null,
     size           bigint not null,
-    retainedSize   bigint not null,
-    reachableSize  bigint not null
+    retainedSize   bigint null,
+    reachableSize  bigint null
 ) engine InnoDB;
 
 create table FieldValue

@@ -9,11 +9,11 @@ import java.util.List;
 public interface InputFilesManager {
 	Path getInputFilesFolder();
 
-	Path getInputFile(String relativePath);
+	Path resolveInputFilePath(String path);
 
 	List<InputFile> listInputFiles() throws IOException;
 
 	List<HeapFile> listLoadedFiles();
 
-	void createLoad(String relativePath);
+	void createLoad(String path);
 }

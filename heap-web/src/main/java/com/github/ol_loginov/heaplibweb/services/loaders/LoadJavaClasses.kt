@@ -18,6 +18,7 @@ internal class LoadJavaClasses(
     }
 
     private val passed = AtomicLong()
+
     @Volatile
     private var total: Long = 0
 
@@ -39,7 +40,7 @@ internal class LoadJavaClasses(
     }
 
     private fun persistJavaClass(clazz: JavaClass) {
-        log.info("{}", clazz.name)
+        log.debug("{}", clazz.name)
         val clazzEntity = JavaClassEntity(
             clazz.javaClassId,
             clazz.name,

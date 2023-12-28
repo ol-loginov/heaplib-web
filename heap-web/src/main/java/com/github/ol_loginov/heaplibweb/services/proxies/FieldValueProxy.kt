@@ -14,7 +14,7 @@ open class FieldValueProxy(
     companion object {
         @JvmStatic
         fun wrap(entity: FieldValueEntity, scope: HeapScope): FieldValue {
-            return if (entity.valueInstanceId == null) FieldValueProxy(entity, scope) else ObjectFieldValueProxy(entity, scope)
+            return if (entity.valueInstanceId > 0) ObjectFieldValueProxy(entity, scope) else FieldValueProxy(entity, scope)
         }
 
         @JvmStatic
@@ -22,8 +22,8 @@ open class FieldValueProxy(
             val fieldEntity = scope.fields.findById(fieldValue.fieldId) ?: throw TransientDataAccessResourceException("no Field#${fieldValue.fieldId}")
             val typeEntity = scope.types.findById(fieldEntity.typeId) ?: throw TransientDataAccessResourceException("no Type#${fieldEntity.typeId}")
             return when (typeEntity.name) {
-                "object" -> fieldValue.valueInstanceId
-                    ?.let { scope.instances.findById(it) }
+                "object" -> scope
+                    .instances.findById(fieldValue.valueInstanceId)
                     ?.let { InstanceProxy.wrap(it, scope) }
 
                 "boolean" -> "0" != fieldValue.value
