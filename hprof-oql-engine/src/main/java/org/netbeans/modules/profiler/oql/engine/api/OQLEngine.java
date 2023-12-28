@@ -29,7 +29,7 @@ import org.netbeans.modules.profiler.oql.engine.api.impl.Snapshot;
  *
  * @author J. Bachorik
  */
-final public class OQLEngine {
+public class OQLEngine {
     final private static Logger LOGGER = Logger.getLogger(OQLEngine.class.getName());
     final private OQLEngineImpl delegate;
     final private Heap heap;

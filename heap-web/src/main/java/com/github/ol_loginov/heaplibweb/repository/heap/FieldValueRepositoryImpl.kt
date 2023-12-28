@@ -5,6 +5,27 @@ import java.util.stream.Stream
 internal class FieldValueRepositoryImpl(
     private val jdbc: ScopedJdbcClient
 ) : FieldValueRepository {
+    override fun persistAll(entities: List<FieldValueEntity>) {
+        entities.forEach { e -> persist(e) }
+    }
+
+    override fun persist(entity: FieldValueEntity) {
+        jdbc
+            .sql(
+                """
+                insert into FieldValue(javaClassId, definingInstanceId, fieldId, staticFlag, value, valueInstanceId) 
+                values(:javaClassId, :definingInstanceId, :fieldId, :staticFlag, :value, :valueInstanceId)
+            """
+            )
+            .param("javaClassId", entity.javaClassId)
+            .param("definingInstanceId", entity.definingInstanceId)
+            .param("fieldId", entity.fieldId)
+            .param("staticFlag", entity.staticFlag)
+            .param("value", entity.value)
+            .param("valueInstanceId", entity.valueInstanceId)
+            .update()
+    }
+
     override fun streamInstanceFieldValues(definingInstanceId: Long): Stream<FieldValueEntity> = jdbc
         .sql(
             """

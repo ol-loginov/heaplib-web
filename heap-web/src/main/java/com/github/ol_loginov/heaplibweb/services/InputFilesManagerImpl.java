@@ -46,7 +46,7 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
 			heapFileRepository.findAllByStatusIn(List.of(HeapFileStatus.LOADING, HeapFileStatus.PENDING)).forEach(pending -> {
 				pending.setStatus(HeapFileStatus.LOADING_ERROR);
 				pending.setLoadError("Has been reset on application start");
-				heapFileRepository.save(pending);
+				heapFileRepository.merge(pending);
 			});
 		});
 	}
@@ -101,11 +101,11 @@ class InputFilesManagerImpl implements InitializingBean, InputFilesManager {
 		}
 
 		var load = transactionOperations.execute(st -> {
-			var entity = new HeapFile();
+			var entity = new HeapFile(relativePath);
 			entity.setLoadStart(Instant.now());
 			entity.setStatus(HeapFileStatus.PENDING);
 			entity.setRelativePath(relativePath);
-			return heapFileRepository.save(entity);
+			return heapFileRepository.persist(entity);
 		});
 		if (load == null) {
 			throw new IllegalStateException("cannot save new enity - returns null");

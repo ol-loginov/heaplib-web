@@ -3,6 +3,9 @@ package com.github.ol_loginov.heaplibweb.repository.heap
 import java.util.stream.Stream
 
 interface FieldValueRepository {
+    fun persist(entity: FieldValueEntity)
+    fun persistAll(entities: List<FieldValueEntity>)
+
     /**
      * select FV.* from FieldValue FV inner  join Field F on F.id = FV.fieldId where F.staticFlag = 0 and FV.definingInstanceId = :definingInstanceId
      */

@@ -1,6 +1,8 @@
 package com.github.ol_loginov.heaplibweb.repository.heap
 
+import org.netbeans.lib.profiler.heap.HeapOperationUnsupportedException
 import org.springframework.jdbc.core.simple.JdbcClient
+import java.util.function.LongSupplier
 
 class HeapScope(
     val heap: HeapEntity,
@@ -18,11 +20,12 @@ class HeapScope(
         }
 
         @JvmStatic
-        fun shouldBeReady(entityAttribute: Long): Long {
-            if (entityAttribute == NUMBER_NOT_READY.toLong()) {
-                throw UnsupportedOperationException("number not ready")
+        fun notReadyValueOnError(supplier: LongSupplier): Long {
+            try {
+                return supplier.getAsLong();
+            } catch (e: HeapOperationUnsupportedException) {
+                return NUMBER_NOT_READY.toLong()
             }
-            return entityAttribute
         }
     }
 
