@@ -2,11 +2,11 @@ create table JavaClass
 (
     javaClassId         bigint       not null primary key,
     name                varchar(512) not null,
-    allInstancesSize    bigint       not null,
+    allInstancesSize    bigint,
     array               bit(1)       not null,
     instanceSize        int          not null,
-    instancesCount      int          not null,
-    retainedSizeByClass bigint       not null,
+    instancesCount      int,
+    retainedSizeByClass bigint,
     superClassId        bigint,
     unique JavaClass_IX_HIN (name)
 ) engine InnoDB;

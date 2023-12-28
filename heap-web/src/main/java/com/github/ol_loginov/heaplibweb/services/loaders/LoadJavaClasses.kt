@@ -44,11 +44,11 @@ internal class LoadJavaClasses(
         val clazzEntity = JavaClassEntity(
             clazz.javaClassId,
             clazz.name,
-            clazz.allInstancesSize,
+            null,
             clazz.isArray,
             clazz.instanceSize,
-            clazz.instancesCount,
-            HeapScope.notReadyValueOnError { clazz.retainedSizeByClass },
+            null,
+            null,
             clazz.superClass?.javaClassId
         )
         scope.javaClasses.persist(clazzEntity)

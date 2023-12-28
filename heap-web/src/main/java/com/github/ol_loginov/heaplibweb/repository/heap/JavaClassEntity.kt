@@ -5,16 +5,16 @@ import org.springframework.lang.NonNull
 
 class JavaClassEntity(
     var javaClassId: Long,
-    
+
     var name: String,
-    var allInstancesSize: Long,
+    var allInstancesSize: Long?,
     var array: Boolean,
     var instanceSize: Int,
-    var instancesCount: Int,
-    var retainedSizeByClass: Long,
+    var instancesCount: Int?,
+    var retainedSizeByClass: Long?,
     var superClassId: Long?
 ) : EntityInstance {
-    internal constructor() : this(0, "", 0, false, 0, 0, 0, null)
+    internal constructor() : this(0, "", null, false, 0, null, null, null)
 
     @NonNull
     override fun toString() = "${javaClass.simpleName}#$javaClassId"
