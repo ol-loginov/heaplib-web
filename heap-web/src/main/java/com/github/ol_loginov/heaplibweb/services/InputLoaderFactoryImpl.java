@@ -25,10 +25,10 @@ class InputLoaderFactoryImpl implements InputLoaderFactory, DisposableBean {
 	}
 
 	@Override
-	public void add(int inputFileLoadId) {
+	public void add(int fileId) {
 		var task = inputLoaderProvider
 			.getObject()
-			.withEntityId(inputFileLoadId);
+			.withFile(fileId);
 		executor.submit(task);
 	}
 }

@@ -1,11 +1,38 @@
 package com.github.ol_loginov.heaplibweb.repository.heap
 
 import org.springframework.dao.TransientDataAccessResourceException
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import java.util.stream.Stream
 
 internal class JavaClassRepositoryImpl(
     private val jdbc: ScopedJdbcClient
 ) : JavaClassRepository {
+    private fun persistQueryParameters(entity: JavaClassEntity) = mapOf(
+        "javaClassId" to entity.javaClassId,
+        "name" to entity.name,
+        "allInstancesSize" to entity.allInstancesSize,
+        "array" to entity.array,
+        "instanceSize" to entity.instanceSize,
+        "instancesCount" to entity.instancesCount,
+        "retainedSizeByClass" to entity.retainedSizeByClass,
+        "superClassId" to entity.superClassId
+    )
+
+    override fun persist(entity: JavaClassEntity) {
+        persistAll(listOf(entity))
+    }
+
+    override fun persistAll(entities: List<JavaClassEntity>) {
+        val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
+        jdbc.batchUpdate(
+            """
+                insert into JavaClass(javaClassId, name, allInstancesSize, array, instanceSize, instancesCount, retainedSizeByClass, superClassId) 
+                values(:javaClassId, :name, :allInstancesSize, :array, :instanceSize, :instancesCount, :retainedSizeByClass, :superClassId)
+            """,
+            batchParameters
+        )
+    }
+
     override fun findById(id: Long): JavaClassEntity? = jdbc
         .sql("select javaClassId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId from JavaClass where id = :id")
         .param("id", id)
@@ -55,22 +82,4 @@ internal class JavaClassRepositoryImpl(
         .query(JavaClassEntity::class.java)
         .stream()
 
-    override fun persist(entity: JavaClassEntity) {
-        jdbc
-            .sql(
-                """
-                insert into JavaClass(javaClassId, name, allInstancesSize, array, instanceSize, instancesCount, retainedSizeByClass, superClassId) 
-                values(:javaClassId, :name, :allInstancesSize, :array, :instanceSize, :instancesCount, :retainedSizeByClass, :superClassId)
-            """
-            )
-            .param("javaClassId", entity.javaClassId)
-            .param("name", entity.name)
-            .param("allInstancesSize", entity.allInstancesSize)
-            .param("array", entity.array)
-            .param("instanceSize", entity.instanceSize)
-            .param("instancesCount", entity.instancesCount)
-            .param("retainedSizeByClass", entity.retainedSizeByClass)
-            .param("superClassId", entity.superClassId)
-            .update()
-    }
 }

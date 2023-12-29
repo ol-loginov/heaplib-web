@@ -8,14 +8,14 @@ create table JavaClass
     instancesCount      int,
     retainedSizeByClass bigint,
     superClassId        bigint,
-    unique JavaClass_IX_HIN (name)
+    unique JavaClass_IX_N (name)
 ) engine InnoDB;
 
 create table Field
 (
     id               int          not null auto_increment primary key,
     declaringClassId bigint       not null,
-    name             varchar(256) not null,
+    name             varchar(128) not null,
     staticFlag       bit(1)       not null,
     typeId           int          not null
 ) engine InnoDB;
@@ -25,8 +25,8 @@ alter table Field
 
 create table Type
 (
-    id   int          not null auto_increment primary key,
-    name varchar(512) not null,
+    id   int         not null auto_increment primary key,
+    name varchar(32) not null,
     unique JavaClass_IX_HIN (name)
 ) engine InnoDB;
 

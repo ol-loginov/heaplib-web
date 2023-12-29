@@ -40,9 +40,22 @@ private class HeapRepositoryImpl @Inject constructor(
             .update()
     }
 
-    override fun findByFile(heapFile: HeapFile): HeapEntity? = jdbc
-        .sql("select Id,fileId,tm,tablePrefix from Heap where fileId = :fileId")
-        .param("fileId", heapFile.id)
+    override fun findById(id: Int): HeapEntity? = jdbc
+        .sql("select Id,fileId,tm,tablePrefix from Heap where id = :id")
+        .param("id", id)
+        .query(HeapEntity::class.java)
+        .optional().orElse(null)
+
+    override fun findByFileLatest(path: String): HeapEntity? = jdbc
+        .sql("""
+            select H.Id, H.fileId, H.tm, H.tablePrefix 
+            from Heap H
+                inner join HeapFile HF on H.fileId = HF.id
+            where HF.path = :path
+            order by HF.id desc
+            limit 1
+        """)
+        .param("path", path)
         .query(HeapEntity::class.java)
         .optional().orElse(null)
 

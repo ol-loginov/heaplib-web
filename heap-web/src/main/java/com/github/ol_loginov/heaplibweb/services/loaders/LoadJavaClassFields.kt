@@ -19,7 +19,7 @@ internal class LoadJavaClassFields(
     private var total: Long = 0
     private val fieldsLoaded = AtomicLong()
 
-    override fun getText(): String = "import class fields: $passed/$total (fields=${fieldsLoaded.get()})"
+    override fun getText(): String = "import class fields: $passed/$total classes (fields=${fieldsLoaded.get()})"
 
     override fun run(callback: Task.Callback) {
         val all = heap.allClasses
@@ -28,21 +28,28 @@ internal class LoadJavaClassFields(
 
         callback.saveProgress(this, true)
 
-        val saver = Saver(heapScope)
-        all.forEach(Consumer { clazz: JavaClass ->
+        val insert = InsertCollector(1000) { list ->
             transactionOperations.executeWithoutResult { _ ->
-                persistJavaClassFields(clazz, typeIdLookup, saver)
-                passed.incrementAndGet()
-                callback.saveProgress(this, false)
+                heapScope.fields.persistAll(list)
             }
-        })
-        transactionOperations.executeWithoutResult { _ -> saver.batchInsert(true) }
+        }
+
+        insert.use {
+            all.forEach { clazz: JavaClass ->
+                persistJavaClassFields(clazz, typeIdLookup, insert)
+                passed.incrementAndGet()
+                callback.saveProgress(this)
+            }
+        }
+
+        callback.saveProgress(this, true)
     }
 
-    private fun persistJavaClassFields(clazz: JavaClass, nameLookup: TypeIdLookup, fieldEntityConsumer: Consumer<FieldEntity>) {
+    private fun persistJavaClassFields(clazz: JavaClass, nameLookup: TypeIdLookup, consumer: Consumer<FieldEntity>) {
         for (field in clazz.fields) {
             fieldsLoaded.incrementAndGet()
-            fieldEntityConsumer.accept(
+
+            consumer.accept(
                 FieldEntity(
                     clazz.javaClassId,
                     field.name, field.isStatic,
@@ -50,36 +57,18 @@ internal class LoadJavaClassFields(
                 )
             )
         }
+
         for (fieldValue in clazz.staticFieldValues) {
             fieldsLoaded.incrementAndGet()
             val field = fieldValue.field
 
-            fieldEntityConsumer.accept(
+            consumer.accept(
                 FieldEntity(
                     field.declaringClass.javaClassId,
                     field.name, field.isStatic,
                     nameLookup.lookupTypeId(field.type.name)
                 )
             )
-        }
-    }
-
-    private class Saver(
-        private val heapScope: HeapScope
-    ) : Consumer<FieldEntity> {
-        private var batch = ArrayList<FieldEntity>()
-
-        override fun accept(fieldEntity: FieldEntity) {
-            batch.add(fieldEntity)
-            batchInsert(false)
-        }
-
-        fun batchInsert(force: Boolean) {
-            if (!force && batch.size < 1000) {
-                return
-            }
-            heapScope.fields.persistAll(batch)
-            batch = ArrayList()
         }
     }
 }

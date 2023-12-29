@@ -42,9 +42,6 @@ class InputLoaderBTest : DatabaseTest() {
     private lateinit var heapFileRepository: HeapFileRepository
 
     @Inject
-    private lateinit var heapRepository: HeapRepository
-
-    @Inject
     private lateinit var inputFilesManager: InputFilesManager
 
     @Inject
@@ -60,7 +57,7 @@ class InputLoaderBTest : DatabaseTest() {
 
         val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
         val work = inputLoaderProvider.getObject()
-        work.withEntityId(heapFile.id)
+        work.withFile(heapFile.id)
         work.run()
     }
 

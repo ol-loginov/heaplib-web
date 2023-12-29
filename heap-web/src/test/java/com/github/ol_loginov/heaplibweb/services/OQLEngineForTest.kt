@@ -1,5 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services
 
+import com.github.ol_loginov.heaplibweb.OQLResults
 import org.netbeans.lib.profiler.heap.Heap
 import org.netbeans.modules.profiler.oql.engine.api.OQLEngine
 
@@ -15,16 +16,22 @@ class OQLEngineForTest(heap: Heap) : OQLEngine(heap) {
     }
 
     fun executeQueryAll(query: String, visitor: (o: Any?) -> Unit) {
-        this.executeQuery(query, { o ->
+        this.executeQuery(query) { o ->
             visitor(o)
-            true
-        })
+            false
+        }
     }
 
     fun executeQueryOnce(query: String, visitor: (o: Any?) -> Unit) {
         this.executeQuery(query) { o ->
             visitor(o)
-            false
+            true
         }
+    }
+
+    fun collectQueryAll(query: String): List<Any?> {
+        val collector = OQLResults.all()
+        this.executeQuery(query, collector)
+        return collector.results
     }
 }

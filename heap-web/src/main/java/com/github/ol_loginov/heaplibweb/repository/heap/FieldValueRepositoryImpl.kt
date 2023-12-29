@@ -1,29 +1,33 @@
 package com.github.ol_loginov.heaplibweb.repository.heap
 
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import java.util.stream.Stream
 
 internal class FieldValueRepositoryImpl(
     private val jdbc: ScopedJdbcClient
 ) : FieldValueRepository {
+    private fun persistQueryParameters(entity: FieldValueEntity) = mapOf(
+        "javaClassId" to entity.javaClassId,
+        "definingInstanceId" to entity.definingInstanceId,
+        "fieldId" to entity.fieldId,
+        "staticFlag" to entity.staticFlag,
+        "value" to entity.value,
+        "valueInstanceId" to entity.valueInstanceId
+    )
+
     override fun persistAll(entities: List<FieldValueEntity>) {
-        entities.forEach { e -> persist(e) }
+        val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
+        jdbc.batchUpdate(
+            """
+                insert into FieldValue(javaClassId, definingInstanceId, fieldId, staticFlag, value, valueInstanceId) 
+                values(:javaClassId, :definingInstanceId, :fieldId, :staticFlag, :value, :valueInstanceId)
+            """,
+            batchParameters
+        )
     }
 
     override fun persist(entity: FieldValueEntity) {
-        jdbc
-            .sql(
-                """
-                insert into FieldValue(javaClassId, definingInstanceId, fieldId, staticFlag, value, valueInstanceId) 
-                values(:javaClassId, :definingInstanceId, :fieldId, :staticFlag, :value, :valueInstanceId)
-            """
-            )
-            .param("javaClassId", entity.javaClassId)
-            .param("definingInstanceId", entity.definingInstanceId)
-            .param("fieldId", entity.fieldId)
-            .param("staticFlag", entity.staticFlag)
-            .param("value", entity.value)
-            .param("valueInstanceId", entity.valueInstanceId)
-            .update()
+        persistAll(listOf(entity))
     }
 
     override fun streamInstanceFieldValues(definingInstanceId: Long): Stream<FieldValueEntity> = jdbc

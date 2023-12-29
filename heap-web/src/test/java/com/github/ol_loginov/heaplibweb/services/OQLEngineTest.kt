@@ -47,9 +47,6 @@ class OQLEngineTest : DatabaseTest() {
     private lateinit var heapFileRepository: HeapFileRepository
 
     @Inject
-    private lateinit var heapRepository: HeapRepository
-
-    @Inject
     private lateinit var inputFilesManager: InputFilesManager
 
     @Inject
@@ -74,12 +71,11 @@ class OQLEngineTest : DatabaseTest() {
 
         val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
         val work = inputLoaderProvider.getObject()
-        work.withEntityId(heapFile.id)
+        work.withFile(heapFile.id)
         work.run()
     }
 
     @Test
-
     fun testSuite() {
         val heap = heapRepository.findAllOrderByIdDesc().first()
         val heapProxy = HeapProxy(heapRepository.getScope(heap))

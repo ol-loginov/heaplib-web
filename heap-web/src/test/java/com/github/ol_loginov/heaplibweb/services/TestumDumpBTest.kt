@@ -5,10 +5,12 @@ import com.github.ol_loginov.heaplibweb.TestTool._when
 import com.github.ol_loginov.heaplibweb.boot_test.DatabaseTest
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepository
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity
 import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader
 import com.github.ol_loginov.heaplibweb.services.proxies.HeapProxy
 import jakarta.inject.Inject
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mockito
@@ -40,31 +42,53 @@ class TestumDumpBTest : DatabaseTest() {
     private lateinit var inputFilesManager: InputFilesManager
 
     @Inject
-    private lateinit var heapRepository: HeapRepository
-
-    @Inject
     private lateinit var heapFileRepository: HeapFileRepository
 
     @Inject
     private lateinit var inputLoaderProvider: ObjectProvider<InputLoader>
 
     @Test
+    fun loadAndQuery() {
+        val heap = loadHeap0()
+        dropScopeAfterTest(heap)
+        runOQL0()
+    }
+
+    @Test
+    fun loadHeap() {
+        val heapEntity = loadHeap0()
+        dropScopeAfterTest(heapEntity)
+    }
+
+    @Test
+    @Disabled("only manual execution")
     @Rollback(false)
-    fun load() {
+    fun loadHeapAndKeep() {
+        loadHeap0()
+    }
+
+    @Test
+    @Disabled("only manual execution")
+    fun runOQL() {
+        runOQL0()
+    }
+
+    private fun loadHeap0(): HeapEntity {
         _when(inputFilesManager.resolveInputFilePath(inputFileName)).thenReturn(TestTool.getResourceFile(inputFileName).toPath())
 
         val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
         val work = inputLoaderProvider.getObject()
-        work.withEntityId(heapFile.id)
+        work.withFile(heapFile.id)
         work.run()
+
+        return work.heapEntity!!
     }
 
-    @Test
-    fun oql() {
-        val heapFile = heapFileRepository.findFirstByPathOrderByIdDesc(inputFileName) ?: throw IllegalStateException()
-        val heap = heapRepository.findByFile(heapFile) ?: throw IllegalStateException()
-        val heapProxy = HeapProxy(heapRepository.getScope(heap))
+    private fun runOQL0() {
+        val heapEntity = heapRepository.findByFileLatest(inputFileName) ?: throw ValueNotReadyException("heap not loaded")
+        val heapProxy = HeapProxy(heapRepository.getScope(heapEntity))
         val oql = OQLEngineForTest(heapProxy)
-        oql.executeQuery("select a from testum.ClassA_Derived a")
+        val results = oql.collectQueryAll("select a from testum.ClassA_Derived a")
+        assertThat(results).hasSize(1)
     }
 }

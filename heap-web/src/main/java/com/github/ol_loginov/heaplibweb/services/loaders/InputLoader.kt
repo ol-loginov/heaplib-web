@@ -33,7 +33,8 @@ class InputLoader @Inject constructor(
         private val log = LoggerFactory.getLogger(InputLoader::class.java)
     }
 
-    private var entityId = 0
+    private var fileId = 0
+    var heapEntity: HeapEntity? = null
 
     private var progressLimit: Long = 1
     private var progressCurrent: Long = 0
@@ -41,18 +42,18 @@ class InputLoader @Inject constructor(
     @Volatile
     private var progressSaved = Instant.now()
 
-    fun withEntityId(entityId: Int): InputLoader {
-        this.entityId = entityId
+    fun withFile(fileId: Int): InputLoader {
+        this.fileId = fileId
         return this
     }
 
     private fun loadFileEntity(): HeapFile {
         return transactionOperations.execute {
-            heapFileRepository.findById(entityId)?.also { heapFile ->
+            heapFileRepository.findById(fileId)?.also { heapFile ->
                 heapFile.status = HeapFileStatus.LOADING
                 heapFileRepository.merge(heapFile)
             }
-        } ?: throw IllegalStateException("no HeapFile#${entityId}")
+        } ?: throw IllegalStateException("no HeapFile#${fileId}")
     }
 
     override fun saveProgress(task: Task, force: Boolean) {
@@ -61,11 +62,11 @@ class InputLoader @Inject constructor(
         }
         val progress = if (progressLimit > 0) (1000 * (progressCurrent / progressLimit.toDouble())).roundToInt() else 0
         transactionOperations.executeWithoutResult {
-            heapFileRepository.findById(entityId)?.also {
+            heapFileRepository.findById(fileId)?.also {
                 it.loadProgress = progress / 1000f
                 it.loadMessage = task.getText()
                 heapFileRepository.merge(it)
-            } ?: throw IllegalStateException("no HeapFile#${entityId}")
+            } ?: throw IllegalStateException("no HeapFile#${fileId}")
         }
         log.info("progress '{}': {}", task.getText(), progress / 10.0)
         progressSaved = Instant.now()
@@ -89,6 +90,7 @@ class InputLoader @Inject constructor(
         val heapEntity = transactionOperations.execute { heapRepository.persist(HeapEntity(entity)) } ?: throw TransientDataAccessResourceException("cannot persist HeapEntity entity")
         heapEntity.generateTablePrefix()
         transactionOperations.execute { heapRepository.merge(heapEntity) }
+        this.heapEntity = heapEntity
 
         val heapScope = heapRepository.getScope(heapEntity)
         heapScope.createTables()
@@ -99,12 +101,34 @@ class InputLoader @Inject constructor(
         progressCurrent = 0
 
         val typeIdLookup = TypeIdLookup(heapScope)
-        runStep(LoadJavaClasses(heap, transactionOperations, heapScope))
-        runStep(LoadJavaClassFields(heap, transactionOperations, heapScope, typeIdLookup))
-        runStep(LoadInstances(heap, transactionOperations, heapScope, typeIdLookup))
+        val stepTimings = mutableListOf<StepTimings>()
+        val stepList = listOf(
+            LoadJavaClasses(heap, transactionOperations, heapScope),
+            LoadJavaClassFields(heap, transactionOperations, heapScope, typeIdLookup),
+            LoadInstances(heap, transactionOperations, heapScope),
+            LoadInstanceFields(heap, transactionOperations, heapScope, typeIdLookup)
+        )
+
+        stepList.forEach {
+            stepTimings.add(runStep(it))
+        }
+
+        log.info("heap#${heapEntity.id} - complete loading")
+
+        val stepTimingsTotal = stepTimings.sumOf { it.duration.toMillis() }
+        val stepTimingsTextLength = stepTimings.maxOf { it.description.length }
+        val stepTimingsText = stepTimings
+            .mapIndexed { index, it -> "${index + 1}) ${it.description.padEnd(stepTimingsTextLength)}\t${it.duration.toMillis() / 1000.0} sec" }
+            .joinToString("\n")
+        log.info("Step timings for heap#${heapEntity.id}: total time - ${stepTimingsTotal / 1000.0} sec\n$stepTimingsText")
     }
 
-    private fun runStep(task: Task) {
+    private fun runStep(task: Task): StepTimings {
+        val start = System.currentTimeMillis()
         task.run(this)
+        val end = System.currentTimeMillis()
+        return StepTimings(task.getText(), Duration.ofMillis(end - start))
     }
+
+    private data class StepTimings(val description: String, val duration: Duration)
 }

@@ -7,6 +7,7 @@ import org.netbeans.lib.profiler.heap.JavaClass
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
 import java.util.concurrent.atomic.AtomicLong
+import java.util.function.Consumer
 
 internal class LoadJavaClasses(
     private val heap: Heap,
@@ -22,7 +23,7 @@ internal class LoadJavaClasses(
     @Volatile
     private var total: Long = 0
 
-    override fun getText(): String = "import java classes: $passed/$total";
+    override fun getText(): String = "import java classes: $passed/$total classes";
 
     override fun run(callback: Task.Callback) {
         val all = heap.allClasses
@@ -30,27 +31,36 @@ internal class LoadJavaClasses(
         passed.set(0)
 
         callback.saveProgress(this, true)
-        heap.allClasses.forEach { clazz: JavaClass ->
-            transactionOperations.executeWithoutResult { _ ->
-                persistJavaClass(clazz)
+        val insert = InsertCollector(1000) { list ->
+            transactionOperations.executeWithoutResult {
+                scope.javaClasses.persistAll(list)
+            }
+        }
+
+        insert.use {
+            heap.allClasses.forEach { clazz: JavaClass ->
+                persistJavaClass(clazz, insert)
                 passed.incrementAndGet()
                 callback.saveProgress(this)
             }
         }
+
+        callback.saveProgress(this, true)
     }
 
-    private fun persistJavaClass(clazz: JavaClass) {
+    private fun persistJavaClass(clazz: JavaClass, collector: Consumer<JavaClassEntity>) {
         log.debug("{}", clazz.name)
-        val clazzEntity = JavaClassEntity(
-            clazz.javaClassId,
-            clazz.name,
-            null,
-            clazz.isArray,
-            clazz.instanceSize,
-            null,
-            null,
-            clazz.superClass?.javaClassId
+        collector.accept(
+            JavaClassEntity(
+                clazz.javaClassId,
+                clazz.name,
+                null,
+                clazz.isArray,
+                clazz.instanceSize,
+                null,
+                null,
+                clazz.superClass?.javaClassId
+            )
         )
-        scope.javaClasses.persist(clazzEntity)
     }
 }

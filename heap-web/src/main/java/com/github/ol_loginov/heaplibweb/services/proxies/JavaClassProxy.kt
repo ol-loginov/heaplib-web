@@ -2,6 +2,7 @@ package com.github.ol_loginov.heaplibweb.services.proxies
 
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity
+import com.github.ol_loginov.heaplibweb.services.ValueNotReadyException
 import com.github.ol_loginov.heaplibweb.services.proxies.FieldValueProxy.Companion.getValueObject
 import org.netbeans.lib.profiler.heap.Field
 import org.netbeans.lib.profiler.heap.FieldValue
@@ -20,12 +21,12 @@ class JavaClassProxy(
 
     private fun wrap(other: JavaClassEntity): JavaClass = wrap(other, scope)
 
-    override fun getAllInstancesSize(): Long = entity.allInstancesSize
+    override fun getAllInstancesSize(): Long = entity.allInstancesSize ?: throw ValueNotReadyException()
     override fun isArray(): Boolean = entity.array
     override fun getName(): String = entity.name
     override fun getInstanceSize() = entity.instanceSize
-    override fun getInstancesCount(): Int = entity.instancesCount
-    override fun getRetainedSizeByClass(): Long = entity.retainedSizeByClass
+    override fun getInstancesCount(): Int = entity.instancesCount ?: throw ValueNotReadyException()
+    override fun getRetainedSizeByClass(): Long = entity.retainedSizeByClass ?: throw ValueNotReadyException()
     override fun getJavaClassId(): Long = entity.javaClassId
     override fun getSuperClass(): JavaClass? {
         return entity.superClassId
