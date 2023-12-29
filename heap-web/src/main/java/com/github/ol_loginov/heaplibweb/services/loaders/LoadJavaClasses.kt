@@ -21,7 +21,7 @@ internal class LoadJavaClasses(
     private val passed = AtomicLong()
 
     @Volatile
-    private var total: Long = 0
+    private var total: Long = -1
 
     override fun getText(): String = "import java classes: $passed/$total classes";
 

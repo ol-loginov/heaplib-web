@@ -4,15 +4,12 @@ import com.github.ol_loginov.heaplibweb.TestTool
 import com.github.ol_loginov.heaplibweb.TestTool._when
 import com.github.ol_loginov.heaplibweb.boot_test.DatabaseTest
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
-import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity
 import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader
 import com.github.ol_loginov.heaplibweb.services.proxies.HeapProxy
 import jakarta.inject.Inject
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
 import org.mockito.Mockito
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
@@ -35,15 +32,8 @@ class TestumDumpBTest : DatabaseTest() {
 
     private val inputFileName = "heapdumps/testum-1703615978111.hprof"
 
-    @TempDir
-    private lateinit var tempDir: Path
-
     @Inject
     private lateinit var inputFilesManager: InputFilesManager
-
-    @Inject
-    private lateinit var heapFileRepository: HeapFileRepository
-
     @Inject
     private lateinit var inputLoaderProvider: ObjectProvider<InputLoader>
 
@@ -69,11 +59,24 @@ class TestumDumpBTest : DatabaseTest() {
 
     @Test
     @Disabled("only manual execution")
+    @Rollback(false)
+    fun loadHugeHeap() {
+        val inputFileName = "xxx"
+        _when(inputFilesManager.resolveInputFilePath(inputFileName)).thenReturn(Path.of(inputFileName))
+
+        val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
+        val work = inputLoaderProvider.getObject()
+        work.withFile(heapFile.id)
+        work.run()
+    }
+
+    @Test
+    @Disabled("only manual execution")
     fun runOQL() {
         runOQL0()
     }
 
-    private fun loadHeap0(): HeapEntity {
+    private fun loadHeap0(): HeapFile {
         _when(inputFilesManager.resolveInputFilePath(inputFileName)).thenReturn(TestTool.getResourceFile(inputFileName).toPath())
 
         val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
@@ -81,12 +84,12 @@ class TestumDumpBTest : DatabaseTest() {
         work.withFile(heapFile.id)
         work.run()
 
-        return work.heapEntity!!
+        return work.heapFile!!
     }
 
     private fun runOQL0() {
-        val heapEntity = heapRepository.findByFileLatest(inputFileName) ?: throw ValueNotReadyException("heap not loaded")
-        val heapProxy = HeapProxy(heapRepository.getScope(heapEntity))
+        val heapEntity = heapFileRepository.findFirstByPathOrderByIdDesc(inputFileName) ?: throw ValueNotReadyException("heap not loaded")
+        val heapProxy = HeapProxy(heapFileRepository.getScope(heapEntity))
         val oql = OQLEngineForTest(heapProxy)
         val results = oql.collectQueryAll("select a from testum.ClassA_Derived a")
         assertThat(results).hasSize(1)

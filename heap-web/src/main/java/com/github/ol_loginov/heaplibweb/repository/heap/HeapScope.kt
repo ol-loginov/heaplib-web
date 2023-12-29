@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets
 import java.util.function.LongSupplier
 
 class HeapScope(
-    val heap: HeapEntity,
+    private val tablePrefix: String,
     private val jdbc: JdbcClient,
     private val jdbcOperations: NamedParameterJdbcOperations
 ) {
@@ -32,8 +32,6 @@ class HeapScope(
             }
         }
     }
-
-    private val tablePrefix = heap.tablePrefix
 
     val types: TypeRepository by lazy { TypeRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val javaClasses: JavaClassRepository by lazy { JavaClassRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }

@@ -6,6 +6,7 @@ interface Task {
     fun run(callback: Callback)
 
     interface Callback {
-        fun saveProgress(task: Task, force: Boolean = false)
+        fun saveProgress(task: Task, force: Boolean = false) = saveProgress(task.getText(), force)
+        fun saveProgress(loadMessage: String, force: Boolean = false)
     }
 }

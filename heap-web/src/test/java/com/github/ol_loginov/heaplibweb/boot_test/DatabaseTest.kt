@@ -1,8 +1,8 @@
 package com.github.ol_loginov.heaplibweb.boot_test
 
 import com.github.ol_loginov.heaplibweb.boot.RepositoryConfig
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapEntity
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepository
+import com.github.ol_loginov.heaplibweb.repository.HeapFile
+import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -36,13 +36,13 @@ abstract class DatabaseTest {
     @Inject
     protected lateinit var jdbc: JdbcClient
     @Inject
-    protected lateinit var heapRepository: HeapRepository
+    protected lateinit var heapFileRepository: HeapFileRepository
     @Inject
     protected lateinit var transactionOperations: TransactionOperations
 
     private val heapsToDrop = mutableListOf<Int>()
 
-    protected fun dropScopeAfterTest(heap: HeapEntity?) {
+    protected fun dropScopeAfterTest(heap: HeapFile?) {
         heap?.let { heapsToDrop.add(it.id) }
     }
 
@@ -54,8 +54,9 @@ abstract class DatabaseTest {
     fun clearTest() {
         heapsToDrop.forEach { heap ->
             transactionOperations.executeWithoutResult {
-                heapRepository.findById(heap)
-                    ?.let { entity -> heapRepository.getScope(entity).dropTables() }
+                heapFileRepository.findById(heap)?.let { entity ->
+                    heapFileRepository.getScope(entity).dropTables()
+                }
             }
         }
     }

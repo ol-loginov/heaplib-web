@@ -1,5 +1,7 @@
 package com.github.ol_loginov.heaplibweb.repository
 
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+
 interface HeapFileRepository {
     fun persist(entity: HeapFile): HeapFile
     fun merge(entity: HeapFile)
@@ -13,4 +15,6 @@ interface HeapFileRepository {
     fun findAllByStatusNotIn(statuses: List<HeapFileStatus>): List<HeapFile>
 
     fun findFirstByPathOrderByIdDesc(path: String): HeapFile?
+
+    fun getScope(heapFile: HeapFile): HeapScope
 }

@@ -4,8 +4,6 @@ import com.github.ol_loginov.heaplibweb.TestTool
 import com.github.ol_loginov.heaplibweb.TestTool._when
 import com.github.ol_loginov.heaplibweb.boot_test.DatabaseTest
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
-import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepository
 import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader
 import com.github.ol_loginov.heaplibweb.services.proxies.HeapProxy
 import jakarta.inject.Inject
@@ -42,13 +40,8 @@ class OQLEngineTest : DatabaseTest() {
     }
 
     private lateinit var instance: OQLEngineForTest
-
-    @Inject
-    private lateinit var heapFileRepository: HeapFileRepository
-
     @Inject
     private lateinit var inputFilesManager: InputFilesManager
-
     @Inject
     private lateinit var inputLoaderProvider: ObjectProvider<InputLoader>
 
@@ -77,8 +70,8 @@ class OQLEngineTest : DatabaseTest() {
 
     @Test
     fun testSuite() {
-        val heap = heapRepository.findAllOrderByIdDesc().first()
-        val heapProxy = HeapProxy(heapRepository.getScope(heap))
+        val heap = heapFileRepository.findAllByOrderByLoadStartDesc().first()
+        val heapProxy = HeapProxy(heapFileRepository.getScope(heap))
 
         instance = OQLEngineForTest(heapProxy)
         log.info("testAltTypeNames")
