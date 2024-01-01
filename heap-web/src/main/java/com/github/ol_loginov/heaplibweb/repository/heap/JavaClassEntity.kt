@@ -8,13 +8,13 @@ class JavaClassEntity(
 
     var name: String,
     var allInstancesSize: Long?,
-    var array: Boolean,
+    var array: Boolean?,
     var instanceSize: Int,
     var instancesCount: Int?,
     var retainedSizeByClass: Long?,
     var superClassId: Long?
 ) : EntityInstance {
-    internal constructor() : this(0, "", null, false, 0, null, null, null)
+    internal constructor() : this(0, "", null, null, 0, null, null, null)
 
     @NonNull
     override fun toString() = "${javaClass.simpleName}#$javaClassId"

@@ -1,11 +1,11 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
+import com.github.ol_loginov.heaplibweb.hprof.HprofStream
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
 import com.github.ol_loginov.heaplibweb.repository.HeapFileStatus
 import com.github.ol_loginov.heaplibweb.services.InputFilesManager
 import jakarta.inject.Inject
-import org.netbeans.lib.profiler.heap.HeapFactory2
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -48,7 +48,6 @@ class InputLoader @Inject constructor(
             heapFileRepository.findById(heapFileId)?.also { heapFile ->
                 heapFile.status = HeapFileStatus.LOADING
                 heapFileRepository.merge(heapFile)
-
             }
         } ?: throw IllegalStateException("no HeapFile#${heapFileId}")
         return this.heapFile!!
@@ -94,35 +93,37 @@ class InputLoader @Inject constructor(
         val dump = inputFilesManager.resolveInputFilePath(heapFile.path).toFile().absoluteFile
 
         saveProgress("open hprof file: ${dump.absolutePath}", true)
-        val heap = if (HeapFactory2.canBeMemMapped(dump)) {
-            HeapFactory2.createFastHeap(dump)
-        } else {
-            HeapFactory2.createFastHeap(dump, DEFAULT_BUFFER_MB * 1024 * 1024)
-        }
 
-        saveProgress("create scope tables", true)
+        val heapStream = HprofStream(dump.toPath())
+//        val heap = if (false && HeapFactory2.canBeMemMapped(dump)) {
+//            HeapFactory2.createFastHeap(dump)
+//        } else {
+//            HeapFactory2.createFastHeap(dump, DEFAULT_BUFFER_MB * 1024 * 1024)
+//        }
+
+        saveProgress("create scope tables #${heapFile.id}", true)
         heapFile.generateTablePrefix()
         transactionOperations.execute { heapFileRepository.merge(heapFile) }
 
         val heapScope = heapFileRepository.getScope(heapFile)
         heapScope.createTables()
 
-        saveProgress("read hprof summary", true)
-        val summary = heap.summary
+//        saveProgress("read hprof summary", true)
+//        val summary = heap.summary
+//
+//        saveProgress("read hprof all classes", true)
+//        val allClasses = heap.allClasses
 
-        saveProgress("read hprof all classes", true)
-        val allClasses = heap.allClasses
-
-        progressLimit = allClasses.size * 3L + summary.totalAllocatedInstances
+        progressLimit = 0
         progressCurrent = 0
 
         val typeIdLookup = TypeIdLookup(heapScope)
         val stepTimings = mutableListOf<StepTimings>()
         val stepList = listOf(
-            LoadJavaClasses(heap, transactionOperations, heapScope),
-            LoadJavaClassFields(heap, transactionOperations, heapScope, typeIdLookup),
-            LoadInstances(heap, transactionOperations, heapScope),
-            LoadInstanceFields(heap, transactionOperations, heapScope, typeIdLookup)
+            LoadJavaClasses(heapStream, transactionOperations, heapScope),
+//            LoadJavaClassFields(heap, transactionOperations, heapScope, typeIdLookup),
+//            LoadInstances(heap, transactionOperations, heapScope),
+//            LoadInstanceFields(heap, transactionOperations, heapScope, typeIdLookup)
         )
 
         stepList.forEach {

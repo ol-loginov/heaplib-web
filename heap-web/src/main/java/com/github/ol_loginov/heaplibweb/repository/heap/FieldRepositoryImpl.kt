@@ -44,7 +44,7 @@ internal class FieldRepositoryImpl(
         .query(FieldEntity::class.java)
         .stream()
 
-    override fun streamAllByDeclaringClassId(declaringClassId: Long): Stream<FieldEntity> = jdbc
+    override fun streamAllByDeclaringClassId(declaringClassId:Long): Stream<FieldEntity> = jdbc
         .sql("select id,declaringClassId,name,staticFlag,typeId from Field where declaringClassId =:declaringClassId order by id")
         .param("declaringClassId", declaringClassId)
         .query(FieldEntity::class.java)

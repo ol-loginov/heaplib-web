@@ -19,7 +19,7 @@ import org.springframework.transaction.support.TransactionOperations
 
 @ExtendWith(MockitoExtension::class)
 @EnableAutoConfiguration
-@ActiveProfiles("local", "test")
+@ActiveProfiles("local", "test", "test-local")
 @SpringBootTest(classes = [DatabaseTest.DatabaseTestContext::class])
 @Transactional
 @Rollback

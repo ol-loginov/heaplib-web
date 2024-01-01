@@ -15,6 +15,7 @@ internal class LoadInstances(
     private val heapScope: HeapScope
 ) : Task {
     private val passed = AtomicLong()
+
     @Volatile
     private var total: Long = 0
 

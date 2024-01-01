@@ -22,12 +22,12 @@ class JavaClassProxy(
     private fun wrap(other: JavaClassEntity): JavaClass = wrap(other, scope)
 
     override fun getAllInstancesSize(): Long = entity.allInstancesSize ?: throw ValueNotReadyException()
-    override fun isArray(): Boolean = entity.array
+    override fun isArray(): Boolean = entity.array ?: throw ValueNotReadyException()
     override fun getName(): String = entity.name
-    override fun getInstanceSize() = entity.instanceSize
+    override fun getInstanceSize() = entity.instanceSize ?: 0
     override fun getInstancesCount(): Int = entity.instancesCount ?: throw ValueNotReadyException()
     override fun getRetainedSizeByClass(): Long = entity.retainedSizeByClass ?: throw ValueNotReadyException()
-    override fun getJavaClassId(): Long = entity.javaClassId
+    override fun getJavaClassId(): Long = entity.javaClassId.toLong()
     override fun getSuperClass(): JavaClass? {
         return entity.superClassId
             ?.let { scope.javaClasses.findByIdSure(it) }

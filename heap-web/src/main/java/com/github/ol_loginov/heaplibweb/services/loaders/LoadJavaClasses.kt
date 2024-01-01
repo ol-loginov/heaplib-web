@@ -1,16 +1,16 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
+import com.github.ol_loginov.heaplibweb.hprof.ClassDump
+import com.github.ol_loginov.heaplibweb.hprof.HprofStream
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity
-import org.netbeans.lib.profiler.heap.Heap
-import org.netbeans.lib.profiler.heap.JavaClass
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
 import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Consumer
 
 internal class LoadJavaClasses(
-    private val heap: Heap,
+    private val heap: HprofStream,
     private val transactionOperations: TransactionOperations,
     private val scope: HeapScope
 ) : Task {
@@ -26,8 +26,6 @@ internal class LoadJavaClasses(
     override fun getText(): String = "import java classes: $passed/$total classes";
 
     override fun run(callback: Task.Callback) {
-        val all = heap.allClasses
-        total = all.size.toLong()
         passed.set(0)
 
         callback.saveProgress(this, true)
@@ -38,8 +36,8 @@ internal class LoadJavaClasses(
         }
 
         insert.use {
-            heap.allClasses.forEach { clazz: JavaClass ->
-                persistJavaClass(clazz, insert)
+            heap.scanJavaClasses().forEach { loadClass: ClassDump ->
+                persistJavaClass(loadClass, insert)
                 passed.incrementAndGet()
                 callback.saveProgress(this)
             }
@@ -48,18 +46,19 @@ internal class LoadJavaClasses(
         callback.saveProgress(this, true)
     }
 
-    private fun persistJavaClass(clazz: JavaClass, collector: Consumer<JavaClassEntity>) {
-        log.debug("{}", clazz.name)
+    private fun persistJavaClass(clazz: ClassDump, collector: Consumer<JavaClassEntity>) {
+        if (log.isDebugEnabled) log.debug("{}", clazz.className.name)
+
         collector.accept(
             JavaClassEntity(
-                clazz.javaClassId,
-                clazz.name,
+                clazz.classObjectId.toLong(),
+                clazz.className.name ?: "",
                 null,
-                clazz.isArray,
-                clazz.instanceSize,
+                null, // clazz.isArray,
+                clazz.instanceSize.toInt(), // clazz.instanceSize,
                 null,
                 null,
-                clazz.superClass?.javaClassId
+                null //                clazz.superClass?.javaClassId
             )
         )
     }

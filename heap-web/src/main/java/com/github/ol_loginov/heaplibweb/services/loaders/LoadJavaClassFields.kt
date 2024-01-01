@@ -15,6 +15,7 @@ internal class LoadJavaClassFields(
     private val typeIdLookup: TypeIdLookup
 ) : Task {
     private val passed = AtomicLong()
+
     @Volatile
     private var total: Long = 0
     private val fieldsLoaded = AtomicLong()

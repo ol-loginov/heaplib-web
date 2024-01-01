@@ -2,6 +2,8 @@ app:
   database:
     schema: heaplib_test
 
+test:
+    huge-dump: ""
 
 spring:
   main:

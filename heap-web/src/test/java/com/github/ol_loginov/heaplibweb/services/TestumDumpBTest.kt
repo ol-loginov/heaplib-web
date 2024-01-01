@@ -11,6 +11,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.netbeans.lib.profiler.heap.HeapFactory2
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
@@ -34,6 +35,7 @@ class TestumDumpBTest : DatabaseTest() {
 
     @Inject
     private lateinit var inputFilesManager: InputFilesManager
+
     @Inject
     private lateinit var inputLoaderProvider: ObjectProvider<InputLoader>
 
@@ -55,19 +57,6 @@ class TestumDumpBTest : DatabaseTest() {
     @Rollback(false)
     fun loadHeapAndKeep() {
         loadHeap0()
-    }
-
-    @Test
-    @Disabled("only manual execution")
-    @Rollback(false)
-    fun loadHugeHeap() {
-        val inputFileName = "xxx"
-        _when(inputFilesManager.resolveInputFilePath(inputFileName)).thenReturn(Path.of(inputFileName))
-
-        val heapFile = heapFileRepository.persist(HeapFile(inputFileName))
-        val work = inputLoaderProvider.getObject()
-        work.withFile(heapFile.id)
-        work.run()
     }
 
     @Test

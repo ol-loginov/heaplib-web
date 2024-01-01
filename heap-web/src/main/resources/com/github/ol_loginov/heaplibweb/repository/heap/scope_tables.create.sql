@@ -3,12 +3,12 @@ create table JavaClass
     javaClassId         bigint       not null primary key,
     name                varchar(512) not null,
     allInstancesSize    bigint,
-    array               bit(1)       not null,
-    instanceSize        int          not null,
+    array               bit(1),
+    instanceSize        int,
     instancesCount      int,
     retainedSizeByClass bigint,
     superClassId        bigint,
-    unique JavaClass_IX_N (name)
+    index JavaClass_IX_N (name)
 ) engine InnoDB;
 
 create table Field
