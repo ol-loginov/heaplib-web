@@ -39,7 +39,6 @@ create table FieldValue
 (
     instanceId      bigint not null,
     fieldId         int    not null,
-    staticFlag      bit(1) not null,
     value           text,
     valueInstanceId bigint,
     primary key FieldValue_PK (instanceId, fieldId),

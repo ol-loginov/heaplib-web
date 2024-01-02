@@ -13,7 +13,7 @@ internal class LoadDumps(
     private val classCountCollector: ClassCountCollector,
     private val javaRootCollector: JavaRootCollector,
     private val fieldEntityLookup: FieldEntityLookup,
-    private val loadPrimitiveArrayItems: Boolean = false
+    private val loadPrimitiveArrayItems: Boolean
 ) : Task {
     private var passed = 0
     private var instancesLoaded = 0

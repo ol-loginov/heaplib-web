@@ -199,3 +199,5 @@ JavaLetterOrDigit
 		[\uD800-\uDBFF] [\uDC00-\uDFFF]
 		{Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
 	;
+
+WhiteSpace : [ \t\r\n]+ -> skip;

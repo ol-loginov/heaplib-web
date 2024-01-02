@@ -25,10 +25,10 @@ class InputLoader @Inject constructor(
     private val inputFilesManager: InputFilesManager
 ) : Runnable, Task.Callback {
     companion object {
-        const val DEFAULT_BUFFER_MB = 100L
-
         private val log = LoggerFactory.getLogger(InputLoader::class.java)
     }
+
+    private var loadPrimitiveArrayItems: Boolean = false
 
     private var heapFileId = 0
     var heapFile: HeapFile? = null
@@ -100,11 +100,6 @@ class InputLoader @Inject constructor(
         saveProgress("use hprof file: ${dump.absolutePath}", true)
 
         val heapStream = HprofStream(dump.toPath())
-//        val heap = if (false && HeapFactory2.canBeMemMapped(dump)) {
-//            HeapFactory2.createFastHeap(dump)
-//        } else {
-//            HeapFactory2.createFastHeap(dump, DEFAULT_BUFFER_MB * 1024 * 1024)
-//        }
 
         saveProgress("create scope tables #${heapFile.id}", true)
         heapFile.generateTablePrefix()
@@ -112,12 +107,6 @@ class InputLoader @Inject constructor(
 
         val heapScope = heapFileRepository.getScope(heapFile)
         heapScope.createTables()
-
-//        saveProgress("read hprof summary", true)
-//        val summary = heap.summary
-//
-//        saveProgress("read hprof all classes", true)
-//        val allClasses = heap.allClasses
 
         progressLimit = 0
         progressCurrent = 0
@@ -133,7 +122,7 @@ class InputLoader @Inject constructor(
             LoadJavaClasses(heapStream, transactionOperations, heapScope, classDumpLookup),
             LoadJavaClassFields(transactionOperations, heapScope, classDumpLookup),
             LoadJavaClassStatics(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup),
-            LoadDumps(heapStream, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup),
+            LoadDumps(heapStream, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
             LoadInstanceCount(transactionOperations, heapScope, classCountCollector),
             LoadInstanceRoots(transactionOperations, heapScope, javaRootCollector)
         )
