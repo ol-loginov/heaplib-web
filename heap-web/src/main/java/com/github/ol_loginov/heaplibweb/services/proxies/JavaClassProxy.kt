@@ -1,7 +1,7 @@
 package com.github.ol_loginov.heaplibweb.services.proxies
 
+import com.github.ol_loginov.heaplibweb.repository.heap.ClassEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
-import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity
 import com.github.ol_loginov.heaplibweb.services.ValueNotReadyException
 import com.github.ol_loginov.heaplibweb.services.proxies.FieldValueProxy.Companion.getValueObject
 import org.netbeans.lib.profiler.heap.Field
@@ -10,16 +10,16 @@ import org.netbeans.lib.profiler.heap.Instance
 import org.netbeans.lib.profiler.heap.JavaClass
 
 class JavaClassProxy(
-    private val entity: JavaClassEntity,
+    private val entity: ClassEntity,
     private val scope: HeapScope
 ) : JavaClass {
 
     companion object {
         @JvmStatic
-        fun wrap(other: JavaClassEntity, scope: HeapScope): JavaClass = JavaClassProxy(other, scope)
+        fun wrap(other: ClassEntity, scope: HeapScope): JavaClass = JavaClassProxy(other, scope)
     }
 
-    private fun wrap(other: JavaClassEntity): JavaClass = wrap(other, scope)
+    private fun wrap(other: ClassEntity): JavaClass = wrap(other, scope)
 
     override fun getAllInstancesSize(): Long = entity.allInstancesSize ?: throw ValueNotReadyException()
     override fun isArray(): Boolean = entity.array ?: throw ValueNotReadyException()
@@ -27,38 +27,38 @@ class JavaClassProxy(
     override fun getInstanceSize() = entity.instanceSize
     override fun getInstancesCount(): Int = entity.instancesCount
     override fun getRetainedSizeByClass(): Long = entity.retainedSizeByClass ?: throw ValueNotReadyException()
-    override fun getJavaClassId(): Long = entity.javaClassId
+    override fun getJavaClassId(): Long = entity.id
     override fun getSuperClass(): JavaClass? {
         return entity.superClassId
-            ?.let { scope.javaClasses.findByIdSure(it) }
+            ?.let { scope.classes.findByIdSure(it) }
             ?.let { wrap(it) }
     }
 
     override fun getSubClasses(): Collection<JavaClass> = scope
-        .javaClasses.streamAllBySuperClassId(entity.javaClassId)
+        .classes.streamAllBySuperClassId(entity.id)
         .map(this::wrap)
         .toList()
 
     override fun getFields(): List<Field> = scope
-        .fields.streamAllByDeclaringClassId(entity.javaClassId)
+        .fields.streamAllByDeclaringClassIdOrderById(entity.id)
         .map { FieldProxy(it, scope) }
         .toList()
 
 
     override fun getInstances(): List<Instance> = scope
-        .instances.streamAllByJavaClassId(entity.javaClassId)
+        .instances.streamAllByJavaClassId(entity.id)
         .map { InstanceProxy.wrap(it, scope) }
         .toList()
 
 
     override fun getStaticFieldValues(): List<FieldValue> {
-        return scope.fieldValues.streamStaticFieldValues(entity.javaClassId)
+        return scope.fieldValues.streamStaticFieldValues(entity.id)
             .map { FieldValueProxy.wrap(it, scope) }
             .toList()
     }
 
     override fun getValueOfStaticField(name: String): Any? = scope
-        .fieldValues.findStaticByClassAndFieldName(entity.javaClassId, name)
+        .fieldValues.findStaticByClassAndFieldName(entity.id, name)
         ?.let { getValueObject(it, scope) }
 
     override fun getClassLoader(): Instance? = getValueOfStaticField("<classLoader>") as Instance?

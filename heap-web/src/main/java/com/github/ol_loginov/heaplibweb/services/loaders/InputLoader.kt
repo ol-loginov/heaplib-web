@@ -127,11 +127,13 @@ class InputLoader @Inject constructor(
         val classDumpLookup = ClassDumpLookup()
         val classCountCollector = ClassCountCollector()
         val javaRootCollector = JavaRootCollector()
+        val fieldEntityLookup = FieldEntityLookup(heapScope)
 
         val stepList = listOf(
             LoadJavaClasses(heapStream, transactionOperations, heapScope, classDumpLookup),
             LoadJavaClassFields(transactionOperations, heapScope, classDumpLookup),
-            LoadDumps(heapStream, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector),
+            LoadJavaClassStatics(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup),
+            LoadDumps(heapStream, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup),
             LoadInstanceCount(transactionOperations, heapScope, classCountCollector),
             LoadInstanceRoots(transactionOperations, heapScope, javaRootCollector)
         )

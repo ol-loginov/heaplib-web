@@ -4,7 +4,6 @@ import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import org.springframework.transaction.support.TransactionOperations
-import java.util.concurrent.atomic.AtomicLong
 import java.util.function.Consumer
 
 internal class LoadJavaClassFields(
@@ -12,17 +11,15 @@ internal class LoadJavaClassFields(
     private val heapScope: HeapScope,
     private val classDumpLookup: ClassDumpLookup
 ) : Task {
-    private val passed = AtomicLong()
+    private var passed = 0
+    private var classCount = 0
+    private var fieldsLoaded = 0
 
-    @Volatile
-    private var classCount: Int = 0
-    private val fieldsLoaded = AtomicLong()
-
-    override fun getText(): String = "import class fields: $passed/$classCount classes (fields=${fieldsLoaded.get()})"
+    override fun getText(): String = "import class fields: $passed/$classCount classes (fields=${fieldsLoaded})"
 
     override fun run(callback: Task.Callback) {
         classCount = classDumpLookup.classCount
-        passed.set(0)
+        passed = 0
 
         callback.saveProgress(this, true)
 
@@ -35,7 +32,7 @@ internal class LoadJavaClassFields(
         insert.use {
             classDumpLookup.classes.forEach { classDump ->
                 persistJavaClassFields(classDump, insert)
-                passed.incrementAndGet()
+                passed++
                 callback.saveProgress(this)
             }
         }
@@ -45,14 +42,14 @@ internal class LoadJavaClassFields(
 
     private fun persistJavaClassFields(clazz: ClassDump, consumer: Consumer<FieldEntity>) {
         for (field in clazz.instanceFields) {
-            fieldsLoaded.incrementAndGet()
+            fieldsLoaded++
             consumer.accept(
                 FieldEntity(clazz.classObjectId.toLong(), field.name.orEmpty(), false, field.type.tag.toByte())
             )
         }
 
         for (field in clazz.staticFields) {
-            fieldsLoaded.incrementAndGet()
+            fieldsLoaded++
             consumer.accept(
                 FieldEntity(clazz.classObjectId.toLong(), field.name.orEmpty(), true, field.type.tag.toByte())
             )

@@ -32,7 +32,7 @@ class HeapScope(
         }
     }
 
-    val javaClasses: JavaClassRepository by lazy { JavaClassRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
+    val classes: ClassRepository by lazy { ClassRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val fields: FieldRepository by lazy { FieldRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val fieldValues: FieldValueRepository by lazy { FieldValueRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val instances: InstanceRepository by lazy { InstanceRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }

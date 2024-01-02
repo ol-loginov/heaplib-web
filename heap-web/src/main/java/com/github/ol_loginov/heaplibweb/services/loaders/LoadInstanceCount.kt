@@ -15,7 +15,7 @@ class LoadInstanceCount(
 
     override fun run(callback: Task.Callback) {
         val insert = InsertCollector(1000) { list ->
-            transactionOperations.executeWithoutResult { heapScope.javaClasses.updateCounts(list) }
+            transactionOperations.executeWithoutResult { heapScope.classes.updateCounts(list) }
         }
 
         val task = this

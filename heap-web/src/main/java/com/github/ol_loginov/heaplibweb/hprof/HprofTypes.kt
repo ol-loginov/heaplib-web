@@ -119,7 +119,7 @@ data class ValueRecord(val type: HprofValueType, val content: Any) {
         fun boolean(ubyte: UByte) = ValueRecord(HprofValueType.Boolean, ubyte != 0.toUByte())
         fun byte(byte: Byte) = ValueRecord(HprofValueType.Boolean, byte)
         fun obj(id: ULong) = ValueRecord(HprofValueType.Object, id)
-        fun char(ushort: UShort) = ValueRecord(HprofValueType.Object, Char(ushort))
+        fun char(ushort: UShort) = ValueRecord(HprofValueType.Char, Char(ushort))
         fun float(float: Float) = ValueRecord(HprofValueType.Float, float)
         fun double(double: Double) = ValueRecord(HprofValueType.Double, double)
         fun short(short: Short) = ValueRecord(HprofValueType.Short, short)

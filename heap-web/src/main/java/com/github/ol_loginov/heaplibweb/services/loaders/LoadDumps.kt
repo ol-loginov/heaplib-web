@@ -11,14 +11,14 @@ internal class LoadDumps(
     private val heapScope: HeapScope,
     private val classDumpLookup: ClassDumpLookup,
     private val classCountCollector: ClassCountCollector,
-    private val javaRootCollector: JavaRootCollector
+    private val javaRootCollector: JavaRootCollector,
+    private val fieldEntityLookup: FieldEntityLookup,
+    private val loadPrimitiveArrayItems: Boolean = false
 ) : Task {
     private var passed = 0
     private var instancesLoaded = 0
     private var primitiveArrays = 0
     private var objectArrays = 0
-
-    private val classFields = mutableMapOf<ULong, List<FieldEntity>>()
 
     override fun getText() = "import instances: $passed dumps (instances=${instancesLoaded}, primitive arrays=${primitiveArrays}, object arrays=${objectArrays})"
 
@@ -77,6 +77,7 @@ internal class LoadDumps(
     }
 
     private fun persistObjectArray(dump: ObjectArrayDump, instanceInsert: (InstanceEntity) -> Unit, arrayInsert: (ObjectArrayEntity) -> Unit) {
+        objectArrays++
         val instanceNumber = classCountCollector.increment(dump.arrayClassId)
         instanceInsert(
             InstanceEntity(
@@ -89,10 +90,10 @@ internal class LoadDumps(
             .mapIndexed { index, item -> ObjectArrayEntity(dump.objectId.toLong(), index, item.toLong()) }
             .filter { it.itemInstanceId > 0 }
             .forEach(arrayInsert)
-        objectArrays++
     }
 
     private fun persistPrimitiveArray(dump: PrimitiveArrayDump, instanceInsert: (InstanceEntity) -> Unit, arrayInsert: (PrimitiveArrayEntity) -> Unit) {
+        primitiveArrays++
         val classObjectId = classDumpLookup.lookupPrimitiveArrayClassId(dump.type)
         val instanceNumber = classCountCollector.increment(classObjectId)
         instanceInsert(
@@ -102,15 +103,10 @@ internal class LoadDumps(
                 null, null
             )
         )
-        dump.array
-            .mapIndexed { index, item -> PrimitiveArrayEntity(dump.objectId.toLong(), index, item.toString()) }
-            .forEach(arrayInsert)
-        primitiveArrays++
-    }
-
-    private fun getClassFieldList(classObjectId: ULong): List<FieldEntity> {
-        return classFields.computeIfAbsent(classObjectId) {
-            heapScope.fields.streamAllByDeclaringClassIdAndNotStaticOrderById(classObjectId.toLong()).toList()
+        if (loadPrimitiveArrayItems) {
+            dump.array
+                .mapIndexed { index, item -> PrimitiveArrayEntity(dump.objectId.toLong(), index, item.toString()) }
+                .forEach(arrayInsert)
         }
     }
 
@@ -130,7 +126,7 @@ internal class LoadDumps(
         if (dump.hasFieldData()) {
             var fieldDefiner: ClassDump? = classDump
             while (fieldReader.available() && fieldDefiner != null) {
-                getClassFieldList(fieldDefiner.classObjectId).forEach { field ->
+                fieldEntityLookup.getInstanceFieldList(fieldDefiner.classObjectId).forEach { field ->
                     val fieldType = field.type
                     val (valueText, valueInstance) = if (fieldType == HprofValueType.Object) {
                         val instanceId = fieldReader.ulong()

@@ -26,7 +26,7 @@ class InstanceProxy(
     override fun getInstanceNumber(): Int = entity.instanceNumber
 
     override fun getJavaClass(): JavaClass? = scope
-        .javaClasses.findById(entity.javaClassId)
+        .classes.findById(entity.javaClassId)
         ?.let { JavaClassProxy(it, scope) }
 
     override fun getSize(): Long = entity.size

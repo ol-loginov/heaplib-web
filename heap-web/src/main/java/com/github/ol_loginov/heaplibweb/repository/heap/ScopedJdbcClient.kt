@@ -11,7 +11,7 @@ internal class ScopedJdbcClient(
     private val jdbcOperations: NamedParameterJdbcOperations
 ) : JdbcClient {
     companion object {
-        val TABLES = arrayOf("FieldValue", "Field", "Instance", "JavaClass", "Type", "PrimitiveArray", "ObjectArray")
+        val TABLES = arrayOf("FieldValue", "Field", "Instance", "Class", "Type", "PrimitiveArray", "ObjectArray")
     }
 
     private val regex = Regex("\\b(" + TABLES.joinToString("|") + ")\\b")

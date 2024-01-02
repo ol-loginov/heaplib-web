@@ -3,7 +3,7 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.hprof.HprofStream
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
-import com.github.ol_loginov.heaplibweb.repository.heap.JavaClassEntity
+import com.github.ol_loginov.heaplibweb.repository.heap.ClassEntity
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
 import java.util.concurrent.atomic.AtomicLong
@@ -33,7 +33,7 @@ internal class LoadJavaClasses(
         callback.saveProgress(this, true)
         val insert = InsertCollector(1000) { list ->
             transactionOperations.executeWithoutResult {
-                scope.javaClasses.persistAll(list)
+                scope.classes.persistAll(list)
             }
         }
 
@@ -52,11 +52,11 @@ internal class LoadJavaClasses(
         callback.saveProgress(this, true)
     }
 
-    private fun persistJavaClass(clazz: ClassDump, collector: Consumer<JavaClassEntity>) {
+    private fun persistJavaClass(clazz: ClassDump, insert: (ClassEntity) -> Unit) {
         if (log.isDebugEnabled) log.debug("{}", clazz.className.name)
 
-        collector.accept(
-            JavaClassEntity(
+        insert(
+            ClassEntity(
                 clazz.classObjectId.toLong(),
                 nullIfZero(clazz.classLoaderObjectId.toLong()),
                 clazz.className.orEmpty(),

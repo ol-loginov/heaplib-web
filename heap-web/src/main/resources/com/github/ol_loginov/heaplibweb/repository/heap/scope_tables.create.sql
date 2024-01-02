@@ -1,6 +1,6 @@
-create table JavaClass
+create table Class
 (
-    javaClassId         bigint       not null primary key,
+    id                  bigint       not null primary key,
     classLoaderObjectId bigint,
     name                varchar(512) not null,
     allInstancesSize    bigint,
@@ -9,7 +9,7 @@ create table JavaClass
     instancesCount      int          not null,
     retainedSizeByClass bigint,
     superClassId        bigint,
-    index JavaClass_IX_N (name)
+    index Class_IX_N (name)
 ) engine InnoDB;
 
 create table Field
@@ -18,11 +18,9 @@ create table Field
     declaringClassId bigint       not null,
     name             varchar(128) not null,
     staticFlag       bit(1)       not null,
-    typeTag          tinyint      not null
+    typeTag          tinyint      not null,
+    foreign key Field_DC (declaringClassId) references Class (id)
 ) engine InnoDB;
-
-alter table Field
-    add foreign key Field_DC (declaringClassId) references JavaClass (javaClassId);
 
 create table Instance
 (

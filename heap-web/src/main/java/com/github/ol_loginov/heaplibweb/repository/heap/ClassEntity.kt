@@ -3,8 +3,8 @@ package com.github.ol_loginov.heaplibweb.repository.heap
 import com.github.ol_loginov.heaplibweb.repository.EntityInstance
 import org.springframework.lang.NonNull
 
-class JavaClassEntity(
-    var javaClassId: Long,
+class ClassEntity(
+    var id: Long,
     var classLoaderObjectId: Long?,
 
     var name: String,
@@ -19,5 +19,5 @@ class JavaClassEntity(
     internal constructor() : this(0, null, "", null, null, 0, 0, null, null)
 
     @NonNull
-    override fun toString() = "${javaClass.simpleName}#$javaClassId"
+    override fun toString() = "${javaClass.simpleName}#$id"
 }
