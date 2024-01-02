@@ -12,18 +12,20 @@ import java.util.function.Consumer
 internal class LoadJavaClasses(
     private val heap: HprofStream,
     private val transactionOperations: TransactionOperations,
-    private val scope: HeapScope
+    private val scope: HeapScope,
+    private val classDumpLookup: ClassDumpLookup
 ) : Task {
     companion object {
         private val log = LoggerFactory.getLogger(LoadJavaClasses::class.java)
+        fun nullIfZero(long: Long): Long? = if (long == 0L) null else long
     }
 
     private val passed = AtomicLong()
 
     @Volatile
-    private var total: Long = -1
+    private var classCount: Int = -1
 
-    override fun getText(): String = "import java classes: $passed/$total classes";
+    override fun getText(): String = "import java classes: $passed/$classCount classes"
 
     override fun run(callback: Task.Callback) {
         passed.set(0)
@@ -36,7 +38,11 @@ internal class LoadJavaClasses(
         }
 
         insert.use {
-            heap.scanJavaClasses().forEach { loadClass: ClassDump ->
+            val classes = heap.scanClasses()
+            classDumpLookup.putAll(classes)
+            classCount = classDumpLookup.classCount
+
+            classes.forEach { loadClass: ClassDump ->
                 persistJavaClass(loadClass, insert)
                 passed.incrementAndGet()
                 callback.saveProgress(this)
@@ -52,13 +58,12 @@ internal class LoadJavaClasses(
         collector.accept(
             JavaClassEntity(
                 clazz.classObjectId.toLong(),
-                clazz.className.name ?: "",
+                nullIfZero(clazz.classLoaderObjectId.toLong()),
+                clazz.className.orEmpty(),
                 null,
                 null, // clazz.isArray,
-                clazz.instanceSize.toInt(), // clazz.instanceSize,
-                null,
-                null,
-                null //                clazz.superClass?.javaClassId
+                clazz.instanceSize.toInt(),
+                0, null, null
             )
         )
     }

@@ -10,8 +10,10 @@ internal class InstanceRepositoryImpl(
         "instanceId" to entity.instanceId,
         "instanceNumber" to entity.instanceNumber,
         "javaClassId" to entity.javaClassId,
-        "gcRoot" to entity.gcRoot,
+        "rootTag" to entity.rootTag,
         "size" to entity.size,
+        "arrayTypeTag" to entity.arrayTypeTag,
+        "arrayLength" to entity.arrayLength,
         "retainedSize" to entity.retainedSize,
         "reachableSize" to entity.reachableSize
     )
@@ -24,17 +26,29 @@ internal class InstanceRepositoryImpl(
         val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
         jdbc.batchUpdate(
             """
-                insert into Instance(instanceId, instanceNumber, javaClassId, gcRoot, size, retainedSize, reachableSize)
-                values(:instanceId, :instanceNumber, :javaClassId, :gcRoot, :size, :retainedSize, :reachableSize)
+                insert into Instance(instanceId, instanceNumber, javaClassId, rootTag, size, arrayTypeTag, arrayLength, retainedSize, reachableSize)
+                values(:instanceId, :instanceNumber, :javaClassId, :rootTag, :size, :arrayTypeTag, :arrayLength, :retainedSize, :reachableSize)
             """,
             batchParameters
         )
     }
 
+    override fun updateRoots(list: List<Pair<ULong, Short>>) {
+        val batchParameters = list.map {
+            MapSqlParameterSource(
+                mapOf(
+                    "instanceId" to it.first.toLong(),
+                    "rootTag" to it.second
+                )
+            )
+        }
+        jdbc.batchUpdate("update Instance set rootTag = :rootTag where instanceId = :instanceId", batchParameters)
+    }
+
     override fun findById(instanceId: Long): InstanceEntity? = jdbc
         .sql(
             """
-            select instanceId,instanceNumber,javaClassId,gcRoot,size,retainedSize,reachableSize
+            select instanceId,instanceNumber,javaClassId,rootTag,size,arrayTypeTag, arrayLength, retainedSize,reachableSize
             from Instance 
             where instanceId = :instanceId
         """
@@ -46,7 +60,7 @@ internal class InstanceRepositoryImpl(
     override fun streamAllByJavaClassId(javaClassId: Long): Stream<InstanceEntity> = jdbc
         .sql(
             """
-            select instanceId,instanceNumber,javaClassId,gcRoot,size,retainedSize,reachableSize
+            select instanceId,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,retainedSize,reachableSize
             from Instance
             where javaClassId = :javaClassId
         """

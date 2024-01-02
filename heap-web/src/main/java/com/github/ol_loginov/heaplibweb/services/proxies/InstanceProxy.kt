@@ -21,7 +21,7 @@ class InstanceProxy(
         .map { FieldValueProxy.wrap(it, scope) }
         .toList()
 
-    override fun isGCRoot(): Boolean = entity.gcRoot
+    override fun isGCRoot(): Boolean = entity.rootTag > 0
     override fun getInstanceId(): Long = entity.instanceId
     override fun getInstanceNumber(): Int = entity.instanceNumber
 

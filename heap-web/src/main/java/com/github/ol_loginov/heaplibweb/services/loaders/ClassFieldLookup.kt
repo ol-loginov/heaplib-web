@@ -9,8 +9,7 @@ import java.util.stream.Collectors
 
 internal class ClassFieldLookup(
     private val scope: HeapScope,
-    private val transactionOperations: TransactionOperations,
-    private val typeIdLookup: TypeIdLookup
+    private val transactionOperations: TransactionOperations
 ) {
     private data class FieldKey(val declaringClassId: Long, val name: String, val isStatic: Boolean)
 
@@ -26,13 +25,14 @@ internal class ClassFieldLookup(
     }
 
     private fun createField(field: Field): Int {
-        return transactionOperations.execute {
-            val fieldEntity = FieldEntity(
-                field.declaringClass.javaClassId, field.name, field.isStatic,
-                typeIdLookup.lookupTypeId(field.type.name)
-            )
-            scope.fields.persist(fieldEntity)
-            fieldEntity.id
-        }!!
+        TODO("not implemented")
+//        return transactionOperations.execute {
+//            val fieldEntity = FieldEntity(
+//                field.declaringClass.javaClassId, field.name, field.isStatic,
+//                typeIdLookup.lookupTypeId(field.type.)
+//            )
+//            scope.fields.persist(fieldEntity)
+//            fieldEntity.id
+//        }!!
     }
 }

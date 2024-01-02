@@ -1,14 +1,12 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
-import java.util.function.Consumer
-
 internal class InsertCollector<T>(
     private val batchSize: Int,
     private val finalizer: (List<T>) -> Unit
-) : Consumer<T>, AutoCloseable {
+) : (T) -> Unit, AutoCloseable {
     private var queue = mutableListOf<T>()
 
-    override fun accept(item: T) {
+    override fun invoke(item: T) {
         queue.add(item)
         complete(false)
     }

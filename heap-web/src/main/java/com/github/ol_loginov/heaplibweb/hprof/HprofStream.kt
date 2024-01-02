@@ -51,9 +51,14 @@ class HprofStream(private val file: Path) {
         }
     }
 
-    fun scanJavaClasses(): List<ClassDump> {
-        return ClassDumpScanner(this)
-            .scan()
+    fun scanClasses(): List<ClassDump> {
+        val scanner = ClassDumpScanner(this)
+        return scanner.scan()
+    }
+
+    fun scanDumps(receiver: DumpReceiver) {
+        val scanner = DumpScanner(this, receiver)
+        scanner.scan()
     }
 
     internal fun scan(recordVisitor: RecordVisitor?, dumpVisitor: HeapDumpVisitor?) {
@@ -81,7 +86,7 @@ class HprofStream(private val file: Path) {
         fun bytesReadString(bytes: Long): String {
             val bytesReadStringFormat = NumberFormat.getIntegerInstance()
             bytesReadStringFormat.isGroupingUsed = true
-            return bytesReadStringFormat.format(bytes)
+            return bytesReadStringFormat.format(bytes) + " bytes"
         }
     }
 
@@ -157,15 +162,15 @@ class HprofStream(private val file: Path) {
             typeCounters[subRecordType.tag.toInt()] += 1
 
             when (subRecordType) {
-                SubRecordType.GC_ROOT_UNKNOWN -> visitor.onGCRootUnknown(reader.id())
-                SubRecordType.GC_ROOT_JNI_GLOBAL -> visitor.onGCRootJniGlobal(reader.id(), reader.id())
-                SubRecordType.GC_ROOT_JNI_LOCAL -> visitor.onGCRootJniLocal(reader.id(), reader.uint(), reader.uint())
-                SubRecordType.GC_ROOT_JAVA_FRAME -> scanRootJavaFrame(reader, visitor)
-                SubRecordType.GC_ROOT_NATIVE_STACK -> throw NotImplementedError()
-                SubRecordType.GC_ROOT_STICKY_CLASS -> scanRootStickyClass(reader, visitor)
-                SubRecordType.GC_ROOT_THREAD_BLOCK -> throw NotImplementedError()
-                SubRecordType.GC_ROOT_MONITOR_USED -> throw NotImplementedError()
-                SubRecordType.GC_ROOT_THREAD_OBJ -> scanRootThreadObj(reader, visitor)
+                SubRecordType.GC_ROOT_UNKNOWN -> visitor.onRootUnknown(reader.id())
+                SubRecordType.GC_ROOT_JNI_GLOBAL -> visitor.onRootJniGlobal(reader.id(), reader.id())
+                SubRecordType.GC_ROOT_JNI_LOCAL -> visitor.onRootJniLocal(reader.id(), reader.uint(), reader.uint())
+                SubRecordType.GC_ROOT_JAVA_FRAME -> visitor.onRootJavaFrame(reader.id(), reader.uint(), reader.uint())
+                SubRecordType.GC_ROOT_NATIVE_STACK -> visitor.onRootNativeStack(reader.id(), reader.uint())
+                SubRecordType.GC_ROOT_STICKY_CLASS -> visitor.onRootStickyClass(reader.id())
+                SubRecordType.GC_ROOT_THREAD_BLOCK -> visitor.onRootThreadBlock(reader.id(), reader.uint())
+                SubRecordType.GC_ROOT_MONITOR_USED -> visitor.onRootMonitorUsed(reader.id())
+                SubRecordType.GC_ROOT_THREAD_OBJ -> visitor.onRootThreadObject(reader.id(), reader.uint(), reader.uint())
                 SubRecordType.GC_CLASS_DUMP -> scanClassDumpSubRecord(reader, visitor)
                 SubRecordType.GC_INSTANCE_DUMP -> scanInstanceDumpSubRecord(reader, visitor)
                 SubRecordType.GC_OBJ_ARRAY_DUMP -> scanObjectArrayDumpSubRecord(reader, visitor)
@@ -208,7 +213,7 @@ class HprofStream(private val file: Path) {
 
         val constantPool = mutableListOf<ValueRecord>()
         for (constantPoolIt in 0 until reader.ushort().toInt()) {
-            val index = reader.ushort()
+            reader.ushort()
             constantPool.add(scanTypeAndValueRecord(reader))
         }
 
@@ -273,24 +278,6 @@ class HprofStream(private val file: Path) {
             HprofValueType.Long -> ValueRecord.long(reader.long())
             else -> throw NotImplementedError("type $type is not supported here")
         }
-    }
-
-    private fun scanRootThreadObj(reader: HprofStreamReader, visitor: HeapDumpVisitor) {
-        val threadObjectId = reader.id()
-        val threadSN = reader.uint()
-        val stackTraceSN = reader.uint()
-        visitor.onGCRootThreadObject(threadObjectId, threadSN, stackTraceSN)
-    }
-
-    private fun scanRootJavaFrame(reader: HprofStreamReader, visitor: HeapDumpVisitor) {
-        val objectId = reader.id()
-        val threadSN = reader.uint()
-        val frame = reader.uint()
-        visitor.onGCRootJavaFrame(objectId, threadSN, frame)
-    }
-
-    private fun scanRootStickyClass(reader: HprofStreamReader, visitor: HeapDumpVisitor) {
-        visitor.onGCRootStickyClass(reader.id())
     }
 }
 

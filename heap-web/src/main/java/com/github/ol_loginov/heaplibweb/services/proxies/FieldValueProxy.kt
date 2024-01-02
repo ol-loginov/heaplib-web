@@ -1,5 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services.proxies
 
+import com.github.ol_loginov.heaplibweb.hprof.HprofValueType
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldValueEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import org.netbeans.lib.profiler.heap.Field
@@ -20,21 +21,20 @@ open class FieldValueProxy(
         @JvmStatic
         fun getValueObject(fieldValue: FieldValueEntity, scope: HeapScope): Any? {
             val fieldEntity = scope.fields.findById(fieldValue.fieldId) ?: throw TransientDataAccessResourceException("no Field#${fieldValue.fieldId}")
-            val typeEntity = scope.types.findById(fieldEntity.typeId) ?: throw TransientDataAccessResourceException("no Type#${fieldEntity.typeId}")
-            return when (typeEntity.name) {
-                "object" -> scope
+            return when (val type = HprofValueType.valueOf(fieldEntity.typeTag.toUByte())) {
+                HprofValueType.Object -> scope
                     .instances.findById(fieldValue.valueInstanceId)
                     ?.let { InstanceProxy.wrap(it, scope) }
 
-                "boolean" -> "0" != fieldValue.value
-                "byte" -> fieldValue.value.toByte()
-                "short" -> fieldValue.value.toShort()
-                "int" -> fieldValue.value.toInt()
-                "long" -> fieldValue.value.toLong()
-                "char" -> fieldValue.value[0]
-                "float" -> fieldValue.value.toFloat()
-                "double" -> fieldValue.value.toDouble()
-                else -> throw IllegalStateException("${typeEntity.name} is not supported")
+                HprofValueType.Boolean -> "0" != fieldValue.value
+                HprofValueType.Byte -> fieldValue.value.toByte()
+                HprofValueType.Short -> fieldValue.value.toShort()
+                HprofValueType.Int -> fieldValue.value.toInt()
+                HprofValueType.Long -> fieldValue.value.toLong()
+                HprofValueType.Char -> fieldValue.value[0]
+                HprofValueType.Float -> fieldValue.value.toFloat()
+                HprofValueType.Double -> fieldValue.value.toDouble()
+                else -> throw IllegalStateException("$type is not supported")
             }
         }
     }
@@ -49,7 +49,7 @@ open class FieldValueProxy(
 
     override fun getDefiningInstance(): Instance? {
         return scope.instances
-            .findById(entity.definingInstanceId)
+            .findById(entity.instanceId)
             ?.let { InstanceProxy(it, scope) }
     }
 }

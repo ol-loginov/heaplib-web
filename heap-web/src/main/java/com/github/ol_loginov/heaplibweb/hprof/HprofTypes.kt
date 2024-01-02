@@ -72,30 +72,45 @@ enum class SubRecordType(val tag: UByte) {
     }
 }
 
-interface HeapDumpVisitor {
-    fun onGCRootUnknown(objectId: ULong) {}
-    fun onGCRootJniGlobal(objectId: ULong, jniGlobalRefId: ULong) {}
-    fun onGCRootJniLocal(objectId: ULong, threadSN: UInt, frame: UInt) {}
-    fun onGCClassDump(dump: ClassDump) {}
-    fun onGCInstanceDump(instanceDumpSubRecord: InstanceDump) {}
-    fun onGCPrimitiveArrayDump(dump: PrimitiveArrayDump) {}
-    fun onGCObjectArrayDump(dump: ObjectArrayDump) {}
-    fun onGCRootThreadObject(threadObjectId: ULong, threadSN: UInt, starkTraceSN: UInt) {}
-    fun onGCRootJavaFrame(objectId: ULong, threadSN: UInt, frame: UInt) {}
-    fun onGCRootStickyClass(objectId: ULong) {}
+
+interface HeapRootVisitor {
+    fun onRootUnknown(objectId: ULong) {}
+    fun onRootJniGlobal(objectId: ULong, jniGlobalRefId: ULong) {}
+    fun onRootJniLocal(objectId: ULong, threadSN: UInt, frame: UInt) {}
+    fun onRootThreadObject(objectId: ULong, threadSN: UInt, stackTraceSN: UInt) {}
+    fun onRootJavaFrame(objectId: ULong, threadSN: UInt, frame: UInt) {}
+    fun onRootStickyClass(objectId: ULong) {}
+    fun onRootNativeStack(objectId: ULong, threadSN: UInt) {}
+    fun onRootThreadBlock(objectId: ULong, threadSN: UInt) {}
+    fun onRootMonitorUsed(objectId: ULong) {}
 }
 
-enum class HprofValueType(val tag: UByte) {
-    Array(0x01u),
-    Object(0x02u),
-    Boolean(0x04u),
-    Char(0x05u),
-    Float(0x06u),
-    Double(0x07u),
-    Byte(0x08u),
-    Short(0x09u),
-    Int(0x0Au),
-    Long(0x0Bu);
+interface HeapDumpVisitor : HeapRootVisitor {
+    fun onGCClassDump(dump: ClassDump) {}
+    fun onGCInstanceDump(dump: InstanceDump) {}
+    fun onGCPrimitiveArrayDump(dump: PrimitiveArrayDump) {}
+    fun onGCObjectArrayDump(dump: ObjectArrayDump) {}
+}
+
+enum class HprofValueType(val tag: UByte, val size: kotlin.Byte) {
+    Array(0x01u, -1),
+    Object(0x02u, -1),
+    Boolean(0x04u, 1),
+    Char(0x05u, 1),
+    Float(0x06u, 4),
+    Double(0x07u, 8),
+    Byte(0x08u, 1),
+    Short(0x09u, 2),
+    Int(0x0Au, 4),
+    Long(0x0Bu, 8);
+
+    companion object {
+        private val TYPE_NAMES = HprofValueType.values().map { e -> e.tag.toInt() to e.name }.toMap()
+        private val TYPE_LOOKUP = HprofValueType.values().map { e -> e.tag to e }.toMap()
+
+        fun valueOf(tag: UByte): HprofValueType = TYPE_LOOKUP[tag]
+            ?: throw IllegalArgumentException("no type for tag ${tag}")
+    }
 }
 
 
@@ -113,7 +128,10 @@ data class ValueRecord(val type: HprofValueType, val content: Any) {
     }
 }
 
-data class StringRef(val id: ULong = 0u, val name: String? = null)
+data class StringRef(val id: ULong = 0u, val name: String? = null) {
+    fun orEmpty() = name ?: ""
+}
+
 data class NamedType(val name: StringRef, val type: HprofValueType)
 data class NamedValue(val name: StringRef, val type: HprofValueType, val value: Any)
 
@@ -134,5 +152,7 @@ data class ClassDump(
 )
 
 data class PrimitiveArrayDump(val objectId: ULong, val starkTraceSN: UInt, val type: HprofValueType, val array: List<Any>)
-data class ObjectArrayDump(val objectId: ULong, val starkTraceSN: UInt, val itemClassId: ULong, val array: List<ULong>)
-data class InstanceDump(val objectId: ULong, val starkTraceSN: UInt, val classObjectId: ULong, val fieldsData: ByteArray)
+data class ObjectArrayDump(val objectId: ULong, val starkTraceSN: UInt, val arrayClassId: ULong, val array: List<ULong>)
+data class InstanceDump(val objectId: ULong, val starkTraceSN: UInt, val classObjectId: ULong, val fieldsData: ByteArray) {
+    fun hasFieldData(): Boolean = fieldsData.isNotEmpty()
+}

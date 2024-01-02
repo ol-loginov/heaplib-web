@@ -3,20 +3,15 @@ package com.github.ol_loginov.heaplibweb.repository.heap
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations
 import org.springframework.jdbc.core.namedparam.SqlParameterSource
 import org.springframework.jdbc.core.simple.JdbcClient
+import org.springframework.jdbc.support.KeyHolder
 
 internal class ScopedJdbcClient(
     private val tablePrefix: String,
     private val delegate: JdbcClient,
     private val jdbcOperations: NamedParameterJdbcOperations
 ) : JdbcClient {
-    private companion object {
-        val TABLES = setOf(
-            "JavaClass",
-            "Field",
-            "Type",
-            "Instance",
-            "FieldValue"
-        )
+    companion object {
+        val TABLES = arrayOf("FieldValue", "Field", "Instance", "JavaClass", "Type", "PrimitiveArray", "ObjectArray")
     }
 
     private val regex = Regex("\\b(" + TABLES.joinToString("|") + ")\\b")
@@ -29,5 +24,9 @@ internal class ScopedJdbcClient(
 
     fun batchUpdate(sql: String, batchValues: List<SqlParameterSource>): IntArray {
         return jdbcOperations.batchUpdate(scopedSql(sql), batchValues.toTypedArray())
+    }
+
+    fun batchUpdate(sql: String, batchValues: List<SqlParameterSource>, generatedKeyHolder: KeyHolder): IntArray {
+        return jdbcOperations.batchUpdate(scopedSql(sql), batchValues.toTypedArray(), generatedKeyHolder)
     }
 }

@@ -13,7 +13,5 @@ class FieldProxy(
     override fun getDeclaringClass(): JavaClass = JavaClassProxy.wrap(scope.javaClasses.findByIdSure(entity.declaringClassId), scope)
     override fun getName() = entity.name
     override fun isStatic() = entity.staticFlag
-    override fun getType(): Type? = scope.types
-        .findById(entity.typeId)
-        ?.let { TypeProxy(it) }
+    override fun getType(): Type? = null
 }

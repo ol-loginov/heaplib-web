@@ -6,6 +6,8 @@ interface JavaClassRepository {
     fun persist(entity: JavaClassEntity)
     fun persistAll(entities: List<JavaClassEntity>)
 
+    fun updateCounts(list: List<Pair<ULong, Int>>)
+
     fun findById(id: Long): JavaClassEntity?
     fun findByIdSure(id: Long): JavaClassEntity
     fun findByName(name: String): JavaClassEntity?

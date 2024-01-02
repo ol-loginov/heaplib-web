@@ -41,24 +41,43 @@ private class RecordCollector(
 }
 
 private class RecordNamer(private val records: MutableList<ClassDump>) : RecordVisitor {
-    private val nameToEntryIndex = mutableMapOf<ULong, MutableList<Int>>()
+    private val updateEntryReferences = mutableMapOf<ULong, MutableSet<Int>>()
 
     init {
-        records.forEachIndexed { index, dump -> nameToEntryIndex.computeIfAbsent(dump.className.id) { mutableListOf() }.add(index) }
+        fun addReference(stringId: ULong, entityIndex: Int) {
+            updateEntryReferences.computeIfAbsent(stringId) { mutableSetOf() }.add(entityIndex)
+        }
+
+        for ((index, v) in records.withIndex()) {
+            addReference(v.className.id, index)
+            v.instanceFields.forEach { t ->
+                addReference(t.name.id, index)
+            }
+            v.staticFields.forEach { t ->
+                addReference(t.name.id, index)
+            }
+        }
     }
 
     override fun onUTF8(reader: HprofStreamReader, length: Long) {
         val id = reader.id()
         val rest = length - reader.idLength
 
-        val indices = nameToEntryIndex.remove(id)
+        val indices = updateEntryReferences.remove(id)
         if (indices == null) {
             reader.skip(rest)
-        } else {
-            val name = reader.string(rest)
-            indices.forEach { index ->
-                records[index] = records[index].copy(className = StringRef(id, name))
+            return
+        }
+
+        val name = StringRef(id, reader.string(rest))
+        indices.forEach { index ->
+            var entry = records[index]
+            if (entry.className.id == id) {
+                entry = entry.copy(className = name)
             }
+            entry = entry.copy(staticFields = entry.staticFields.map { if (it.name.id == id) it.copy(name = name) else it })
+            entry = entry.copy(instanceFields = entry.instanceFields.map { if (it.name.id == id) it.copy(name = name) else it })
+            records[index] = entry
         }
     }
 }

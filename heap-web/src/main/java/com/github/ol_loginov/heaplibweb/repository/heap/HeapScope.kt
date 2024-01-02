@@ -13,7 +13,6 @@ class HeapScope(
 ) {
     companion object {
         const val NUMBER_NOT_READY = -1
-        private val SCOPE_TABLES = arrayOf("FieldValue", "Field", "Instance", "JavaClass", "Type")
 
         @JvmStatic
         fun shouldBeReady(entityAttribute: Int): Int {
@@ -33,11 +32,12 @@ class HeapScope(
         }
     }
 
-    val types: TypeRepository by lazy { TypeRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val javaClasses: JavaClassRepository by lazy { JavaClassRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val fields: FieldRepository by lazy { FieldRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val fieldValues: FieldValueRepository by lazy { FieldValueRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
     val instances: InstanceRepository by lazy { InstanceRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
+    val primitiveArrayItems: PrimitiveArrayRepository by lazy { PrimitiveArrayRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
+    val objectArrayItems: ObjectArrayRepository by lazy { ObjectArrayRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
 
     fun executeTablesScript(scriptResource: String) {
         val script = HeapScope::class.java.getResourceAsStream(scriptResource).use {
@@ -46,7 +46,7 @@ class HeapScope(
             it.reader(StandardCharsets.UTF_8).readText()
         }
 
-        val tableNameRegex = Regex("\\b(" + SCOPE_TABLES.joinToString("|") + ")(_|\\b)")
+        val tableNameRegex = Regex("\\b(" + ScopedJdbcClient.TABLES.joinToString("|") + ")(_|\\b)")
         script.split(';')
             .map { it.trim() }
             .filter { it.isNotBlank() }

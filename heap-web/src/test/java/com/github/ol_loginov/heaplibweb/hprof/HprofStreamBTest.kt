@@ -22,6 +22,6 @@ class HprofStreamBTest {
     fun scrollHugeDump() {
         val hugeDumpFile = Path(environment.get("test.huge-dump") ?: throw IllegalStateException("expected 'test.huge-dump' to have a file path"))
         val hprof = HprofStream(hugeDumpFile)
-        hprof.scanJavaClasses()
+        hprof.scanClasses()
     }
 }

@@ -1,5 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
+import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.hprof.HprofStream
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
@@ -58,15 +59,19 @@ class InputLoader @Inject constructor(
             return
         }
         val progress = if (progressLimit > 0) (1000 * (progressCurrent / progressLimit.toDouble())).roundToInt() else 0
+        saveFileLoadMessage(loadMessage, progress)
+        progressSaved = Instant.now()
+    }
+
+    private fun saveFileLoadMessage(message: String, progress: Int = 1000) {
         transactionOperations.executeWithoutResult {
             heapFileRepository.findById(heapFileId)?.also {
                 it.loadProgress = progress / 1000f
-                it.loadMessage = loadMessage
+                it.loadMessage = message
                 heapFileRepository.merge(it)
             } ?: throw IllegalStateException("no HeapFile#${heapFileId}")
         }
-        log.info("progress '{}': {}", loadMessage, progress / 10.0)
-        progressSaved = Instant.now()
+        log.info(message)
     }
 
     override fun run() {
@@ -92,7 +97,7 @@ class InputLoader @Inject constructor(
         val heapFile = loadFileEntity()
         val dump = inputFilesManager.resolveInputFilePath(heapFile.path).toFile().absoluteFile
 
-        saveProgress("open hprof file: ${dump.absolutePath}", true)
+        saveProgress("use hprof file: ${dump.absolutePath}", true)
 
         val heapStream = HprofStream(dump.toPath())
 //        val heap = if (false && HeapFactory2.canBeMemMapped(dump)) {
@@ -117,13 +122,18 @@ class InputLoader @Inject constructor(
         progressLimit = 0
         progressCurrent = 0
 
-        val typeIdLookup = TypeIdLookup(heapScope)
         val stepTimings = mutableListOf<StepTimings>()
+
+        val classDumpLookup = ClassDumpLookup()
+        val classCountCollector = ClassCountCollector()
+        val javaRootCollector = JavaRootCollector()
+
         val stepList = listOf(
-            LoadJavaClasses(heapStream, transactionOperations, heapScope),
-//            LoadJavaClassFields(heap, transactionOperations, heapScope, typeIdLookup),
-//            LoadInstances(heap, transactionOperations, heapScope),
-//            LoadInstanceFields(heap, transactionOperations, heapScope, typeIdLookup)
+            LoadJavaClasses(heapStream, transactionOperations, heapScope, classDumpLookup),
+            LoadJavaClassFields(transactionOperations, heapScope, classDumpLookup),
+            LoadDumps(heapStream, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector),
+            LoadInstanceCount(transactionOperations, heapScope, classCountCollector),
+            LoadInstanceRoots(transactionOperations, heapScope, javaRootCollector)
         )
 
         stepList.forEach {
@@ -137,7 +147,7 @@ class InputLoader @Inject constructor(
         val stepTimingsText = stepTimings
             .mapIndexed { index, it -> "${index + 1}) ${it.description.padEnd(stepTimingsTextLength)}\t${it.duration.toMillis() / 1000.0} sec" }
             .joinToString("\n")
-        saveProgress("Step timings for HeapFile#${heapFile.id}: total time - ${stepTimingsTotal / 1000.0} sec\n$stepTimingsText", true)
+        saveFileLoadMessage("Step timings for HeapFile#${heapFile.id}: total time - ${stepTimingsTotal / 1000.0} sec\n$stepTimingsText")
     }
 
     private fun runStep(task: Task): StepTimings {
