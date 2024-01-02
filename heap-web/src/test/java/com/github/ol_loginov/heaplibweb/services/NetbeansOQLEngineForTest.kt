@@ -3,15 +3,19 @@ package com.github.ol_loginov.heaplibweb.services
 import com.github.ol_loginov.heaplibweb.OQLResults
 import org.netbeans.lib.profiler.heap.Heap
 import org.netbeans.modules.profiler.oql.engine.api.OQLEngine
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-class OQLEngineForTest(heap: Heap) : OQLEngine(heap) {
+private val log: Logger = LoggerFactory.getLogger(NetbeansOQLEngineForTest::class.java)
+
+class NetbeansOQLEngineForTest(heap: Heap) : OQLEngine(heap) {
     override fun executeQuery(query: String, visitor: ObjectVisitor) {
-        OQLEngineTest.log.info("Execute >>> $query")
+        log.info("Execute >>> $query")
         super.executeQuery(query, visitor)
     }
 
     fun executeQuery(query: String) {
-        OQLEngineTest.log.info("Execute >>> $query")
+        log.info("Execute >>> $query")
         super.executeQuery(query, null)
     }
 

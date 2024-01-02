@@ -39,6 +39,7 @@
         <module>heaplib</module>
         <module>heap-cli</module>
         <module>heap-web</module>
+        <module>heap-web-oql</module>
     </modules>
 
     <licenses>

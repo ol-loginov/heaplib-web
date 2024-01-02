@@ -36,6 +36,7 @@ class InputLoaderBTest : DatabaseTest() {
 
     @Inject
     private lateinit var inputFilesManager: InputFilesManager
+
     @Inject
     private lateinit var inputLoaderProvider: ObjectProvider<InputLoader>
 
@@ -60,7 +61,7 @@ class InputLoaderBTest : DatabaseTest() {
         val heap = heapFileRepository.findAllByOrderByLoadStartDesc().get(0)
         val heapProxy = HeapProxy(heapFileRepository.getScope(heap))
 
-        val oql = OQLEngineForTest(heapProxy)
+        val oql = NetbeansOQLEngineForTest(heapProxy)
         oql.executeQuery("select a from [I a")
         oql.executeQuery("select a from [B a")
         oql.executeQuery("select a from [C a")

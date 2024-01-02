@@ -9,7 +9,6 @@ internal class FieldValueRepositoryImpl(
     private fun persistQueryParameters(entity: FieldValueEntity) = mapOf(
         "instanceId" to entity.instanceId,
         "fieldId" to entity.fieldId,
-        "staticFlag" to entity.staticFlag,
         "value" to entity.value,
         "valueInstanceId" to entity.valueInstanceId
     )
@@ -18,8 +17,8 @@ internal class FieldValueRepositoryImpl(
         val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
         jdbc.batchUpdate(
             """
-                insert into FieldValue(instanceId, fieldId, staticFlag, value, valueInstanceId) 
-                values(:instanceId, :fieldId, :staticFlag, :value, :valueInstanceId)
+                insert into FieldValue(instanceId, fieldId, value, valueInstanceId) 
+                values(:instanceId, :fieldId, :value, :valueInstanceId)
             """,
             batchParameters
         )
@@ -34,7 +33,7 @@ internal class FieldValueRepositoryImpl(
             """
             select FV.instanceId, FV.fieldId, FV.staticFlag, FV.value, FV.valueInstanceId
              from FieldValue FV 
-                inner  join Field F on F.id = FV.fieldId 
+                inner join Field F on F.id = FV.fieldId 
             where F.staticFlag = 0 and FV.instanceId = :instanceId
         """
         )
@@ -47,7 +46,7 @@ internal class FieldValueRepositoryImpl(
             """
             select FV.instanceId, FV.fieldId, FV.staticFlag, FV.value, FV.valueInstanceId
             from FieldValue FV 
-                inner  join Field F on F.id = FV.fieldId 
+                inner join Field F on F.id = FV.fieldId 
             where F.staticFlag = 0 and FV.instanceId = :instanceId and F.name = :fieldName
         """
         )
@@ -61,7 +60,8 @@ internal class FieldValueRepositoryImpl(
             """
             select FV.instanceId, FV.fieldId, FV.staticFlag, FV.value, FV.valueInstanceId
             from FieldValue FV 
-            where FV.staticFlag = 1 and FV.instanceId = :declaringClassId
+                inner join Field F on F.id = FV.fieldId 
+            where F.staticFlag = 1 and FV.instanceId = :declaringClassId
         """
         )
         .param("declaringClassId", declaringClassId)
@@ -73,6 +73,7 @@ internal class FieldValueRepositoryImpl(
             """
             select FV.instanceId,FV.fieldId,FV.staticFlag,FV.value,FV.valueInstanceId
             from FieldValue FV
+                inner join Field F on F.id = FV.fieldId 
             where F.staticFlag = 1 and FV.instanceId = :declaringClassId and F.name = :fieldName
         """
         )

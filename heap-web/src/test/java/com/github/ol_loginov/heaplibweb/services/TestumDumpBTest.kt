@@ -79,7 +79,7 @@ class TestumDumpBTest : DatabaseTest() {
     private fun runOQL0() {
         val heapEntity = heapFileRepository.findFirstByPathOrderByIdDesc(inputFileName) ?: throw ValueNotReadyException("heap not loaded")
         val heapProxy = HeapProxy(heapFileRepository.getScope(heapEntity))
-        val oql = OQLEngineForTest(heapProxy)
+        val oql = NetbeansOQLEngineForTest(heapProxy)
         val results = oql.collectQueryAll("select a from testum.ClassA_Derived a")
         assertThat(results).hasSize(1)
     }

@@ -135,7 +135,7 @@ internal class LoadDumps(
                         fieldReader.primitiveText(fieldType) to 0UL
                     }
 
-                    val fieldValueEntity = FieldValueEntity(dump.objectId.toLong(), field.id, false, valueText, valueInstance.toLong())
+                    val fieldValueEntity = FieldValueEntity(dump.objectId.toLong(), field.id, valueText, valueInstance.toLong())
                     fieldEntitySaver(fieldValueEntity)
                 }
                 fieldDefiner = if (fieldDefiner.superClassObjectId == 0UL) null else classDumpLookup.lookup(fieldDefiner.superClassObjectId)

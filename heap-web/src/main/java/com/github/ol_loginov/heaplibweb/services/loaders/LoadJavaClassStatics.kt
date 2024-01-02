@@ -2,7 +2,6 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.hprof.HprofValueType
-import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldValueEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import org.springframework.transaction.support.TransactionOperations
@@ -53,7 +52,7 @@ internal class LoadJavaClassStatics(
                         value.value.toString() to 0L
                     }
 
-                    val fieldValueEntity = FieldValueEntity(dump.classObjectId.toLong(), field.id, true, valueText, valueInstance)
+                    val fieldValueEntity = FieldValueEntity(dump.classObjectId.toLong(), field.id, valueText, valueInstance)
                     insert(fieldValueEntity)
                     fieldsLoaded++
                 }

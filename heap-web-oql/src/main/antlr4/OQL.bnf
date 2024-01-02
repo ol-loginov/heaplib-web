@@ -1,0 +1,28 @@
+SelectStatement ::= "SELECT" SelectList FromClause ( WhereClause )? ( UnionClause )?
+SelectList ::= (( "DISTINCT" | "AS RETAINED SET" )? ( "*" | "OBJECTS" SelectItem | SelectItem ( "," SelectItem )* ))
+SelectItem ::= ( PathExpression | EnvVarPathExpression ) ( "AS" ( <STRING_LITERAL> | <IDENTIFIER> ) )?
+PathExpression ::= ( ObjectFacet | BuiltInFunction ) ( "." ObjectFacet | "[" SimpleExpression ( ":" SimpleExpression)? "]" )*
+EnvVarPathExpression ::= ( "$" "{" <IDENTIFIER> "}" ) ( "." ObjectFacet | "[" SimpleExpression ( ":" SimpleExpression)? "]" )*
+ObjectFacet ::= ( ( "@" )? <IDENTIFIER> ( ParameterList )? )
+ParameterList ::= "(" ( ( SimpleExpression ( "," SimpleExpression )* ) )? ")"
+FromClause ::= "FROM" ( "OBJECTS" )? ( "INSTANCEOF" )? ( FromItem | "(" SelectStatement ")" ) ( <IDENTIFIER> )?
+FromItem ::= ( ClassName | <STRING_LITERAL> | ObjectAddress ( "," ObjectAddress )* | ObjectId ( "," ObjectId )* | EnvVarPathExpression )
+ClassName ::= ( <IDENTIFIER> ( "." <IDENTIFIER> )* ( "[]" )* )
+ObjectAddress ::= <HEX_LITERAL>
+ObjectId ::= <INTEGER_LITERAL>
+WhereClause ::= "WHERE" ConditionalOrExpression
+ConditionalOrExpression ::= ConditionalAndExpression ( "or" ConditionalAndExpression )*
+ConditionalAndExpression ::= EqualityExpression ( "and" EqualityExpression )*
+EqualityExpression ::= RelationalExpression ( ( "=" RelationalExpression | "!=" RelationalExpression ) )*
+RelationalExpression ::= ( SimpleExpression ( ( "<" SimpleExpression | ">" SimpleExpression | "<=" SimpleExpression | ">=" SimpleExpression | ( LikeClause | InClause ) | "implements" ClassName ) )? )
+LikeClause ::= ( "NOT" )? "LIKE" <STRING_LITERAL>
+InClause ::= ( "NOT" )? "IN" SimpleExpression
+SimpleExpression ::= MultiplicativeExpression ( "+" MultiplicativeExpression | "-" MultiplicativeExpression )*
+MultiplicativeExpression ::= PrimaryExpression ( "*" PrimaryExpression | "/" PrimaryExpression )*
+PrimaryExpression ::= Literal | "(" ( ConditionalOrExpression | SubQuery ) ")" | PathExpression  | EnvVarPathExpression
+SubQuery ::= SelectStatement
+BuiltInFunction ::= ( ( "toHex" | "toString" | "dominators" | "outbounds" | "inbounds" | "classof" | "dominatorof" ) "(" ConditionalOrExpression ")" )
+Literal ::= ( <INTEGER_LITERAL> | <LONG_LITERAL> | <FLOATING_POINT_LITERAL> | <CHARACTER_LITERAL> | <STRING_LITERAL> | BooleanLiteral | NullLiteral )
+BooleanLiteral ::= "true" | "false"
+NullLiteral ::= <NULL>
+UnionClause ::= ( "UNION" "(" SelectStatement ")" )+

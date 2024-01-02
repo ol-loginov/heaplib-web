@@ -253,7 +253,7 @@ public class OQLEngineImpl {
                             bindings.put(q.identifier, wrapped);
                             Object res = whereCs.eval(bindings);
                             if (res instanceof Boolean) {
-                                b = ((Boolean) res).booleanValue();
+                                b = (Boolean) res;
                             } else if (res instanceof Number) {
                                 b = ((Number) res).intValue() != 0;
                             } else {
