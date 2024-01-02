@@ -4,6 +4,7 @@ import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.hprof.HprofValueType
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldValueEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.support.pretty
 import org.springframework.transaction.support.TransactionOperations
 
 internal class LoadJavaClassStatics(
@@ -16,14 +17,14 @@ internal class LoadJavaClassStatics(
     private var passed: Int = 0
     private var fieldsLoaded: Int = 0
 
-    override fun getText(): String = "import class statics: $passed/$classCount classes (fields=${fieldsLoaded})"
+    override fun getText(): String = "import class statics: ${passed.pretty()}/${classCount.pretty()} classes (fields=${fieldsLoaded.pretty()})"
 
     override fun run(callback: Task.Callback) {
         val task = this
         classCount = classDumpLookup.classCount
         passed = 0
 
-        val fieldValuesInsert = InsertCollector(1000) { list ->
+        val fieldValuesInsert = InsertCollector("field values") { list ->
             transactionOperations.executeWithoutResult { heapScope.fieldValues.persistAll(list) }
         }
 

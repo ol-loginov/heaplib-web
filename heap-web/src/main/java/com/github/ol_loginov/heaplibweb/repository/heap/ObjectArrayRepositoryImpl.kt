@@ -16,7 +16,6 @@ internal class ObjectArrayRepositoryImpl(
     }
 
     override fun persistAll(entities: List<ObjectArrayEntity>) {
-        val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
-        jdbc.batchUpdate("insert into ObjectArray(instanceId, itemIndex, itemInstanceId) values(:instanceId, :itemIndex, :itemInstanceId)", batchParameters)
+        MultiValuesInsert(jdbc, "ObjectArray").execute(entities.map { persistQueryParameters(it) })
     }
 }

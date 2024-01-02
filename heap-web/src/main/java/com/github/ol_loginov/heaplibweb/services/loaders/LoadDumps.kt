@@ -2,6 +2,7 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 
 import com.github.ol_loginov.heaplibweb.hprof.*
 import com.github.ol_loginov.heaplibweb.repository.heap.*
+import com.github.ol_loginov.heaplibweb.support.pretty
 import com.github.ol_loginov.heaplibweb.support.use
 import org.springframework.transaction.support.TransactionOperations
 
@@ -20,23 +21,23 @@ internal class LoadDumps(
     private var primitiveArrays = 0
     private var objectArrays = 0
 
-    override fun getText() = "import instances: $passed dumps (instances=${instancesLoaded}, primitive arrays=${primitiveArrays}, object arrays=${objectArrays})"
+    override fun getText() = "import instances: ${passed.pretty()} dumps (instances=${instancesLoaded.pretty()}, primitive arrays=${primitiveArrays.pretty()}, object arrays=${objectArrays.pretty()})"
 
     override fun run(callback: Task.Callback) {
         passed = 0
 
         callback.saveProgress(this, true)
 
-        val instanceInsert = InsertCollector(1000) { list ->
+        val instanceInsert = InsertCollector("instances") { list ->
             transactionOperations.executeWithoutResult { heapScope.instances.persistAll(list) }
         }
-        val fieldValuesInsert = InsertCollector(1000) { list ->
+        val fieldValuesInsert = InsertCollector("field values") { list ->
             transactionOperations.executeWithoutResult { heapScope.fieldValues.persistAll(list) }
         }
-        val primitiveArrayInsert = InsertCollector(1000) { list ->
+        val primitiveArrayInsert = InsertCollector("primitive array items") { list ->
             transactionOperations.executeWithoutResult { heapScope.primitiveArrayItems.persistAll(list) }
         }
-        val objectArrayInsert = InsertCollector(1000) { list ->
+        val objectArrayInsert = InsertCollector("object array items") { list ->
             transactionOperations.executeWithoutResult { heapScope.objectArrayItems.persistAll(list) }
         }
 

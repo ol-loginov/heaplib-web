@@ -6,7 +6,7 @@ interface FieldRepository {
     fun persist(entity: FieldEntity)
     fun persistAll(batch: List<FieldEntity>)
 
-    fun streamAllByDeclaringClassIdOrderById(declaringClassId: Long): Stream<FieldEntity>
+    fun findAllByDeclaringClassIdOrderById(declaringClassId: Long): List<FieldEntity>
     fun streamAll(): Stream<FieldEntity>
 
     fun findById(id: Int): FieldEntity?

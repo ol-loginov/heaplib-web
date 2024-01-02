@@ -22,6 +22,10 @@ internal class ScopedJdbcClient(
 
     fun scopedSql(sql: String) = regex.replace(sql, "${tablePrefix}$1")
 
+    fun update(sql: String, paramSource: SqlParameterSource): Int {
+        return jdbcOperations.update(scopedSql(sql), paramSource)
+    }
+
     fun batchUpdate(sql: String, batchValues: List<SqlParameterSource>): IntArray {
         return jdbcOperations.batchUpdate(scopedSql(sql), batchValues.toTypedArray())
     }

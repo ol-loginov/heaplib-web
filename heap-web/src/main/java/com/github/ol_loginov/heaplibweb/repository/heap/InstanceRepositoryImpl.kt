@@ -23,14 +23,7 @@ internal class InstanceRepositoryImpl(
     }
 
     override fun persistAll(entities: List<InstanceEntity>) {
-        val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
-        jdbc.batchUpdate(
-            """
-                insert into Instance(instanceId, instanceNumber, javaClassId, rootTag, size, arrayTypeTag, arrayLength, retainedSize, reachableSize)
-                values(:instanceId, :instanceNumber, :javaClassId, :rootTag, :size, :arrayTypeTag, :arrayLength, :retainedSize, :reachableSize)
-            """,
-            batchParameters
-        )
+        MultiValuesInsert(jdbc, "Instance").execute(entities.map { persistQueryParameters(it) })
     }
 
     override fun updateRoots(list: List<Pair<ULong, Short>>) {

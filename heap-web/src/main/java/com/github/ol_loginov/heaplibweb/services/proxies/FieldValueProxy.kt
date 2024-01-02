@@ -15,7 +15,8 @@ open class FieldValueProxy(
     companion object {
         @JvmStatic
         fun wrap(entity: FieldValueEntity, scope: HeapScope): FieldValue {
-            return if (entity.valueInstanceId > 0) ObjectFieldValueProxy(entity, scope) else FieldValueProxy(entity, scope)
+            TODO()
+//            return if (entity.valueInstanceId > 0) ObjectFieldValueProxy(entity, scope) else FieldValueProxy(entity, scope)
         }
 
         @JvmStatic
@@ -45,7 +46,7 @@ open class FieldValueProxy(
         return FieldProxy(field, scope)
     }
 
-    override fun getValue(): String = entity.value
+    override fun getValue(): String = TODO()
 
     override fun getDefiningInstance(): Instance? {
         return scope.instances

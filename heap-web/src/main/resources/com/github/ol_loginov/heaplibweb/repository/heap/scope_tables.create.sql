@@ -39,7 +39,7 @@ create table FieldValue
 (
     instanceId      bigint not null,
     fieldId         int    not null,
-    value           text,
+    value           varchar(32),
     valueInstanceId bigint,
     primary key FieldValue_PK (instanceId, fieldId),
     index FieldValue_IX_DII (instanceId)

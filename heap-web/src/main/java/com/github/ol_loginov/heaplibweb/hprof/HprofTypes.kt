@@ -1,9 +1,5 @@
 package com.github.ol_loginov.heaplibweb.hprof
 
-import org.slf4j.LoggerFactory
-
-private val log = LoggerFactory.getLogger("com.github.ol_loginov.heaplibweb.hprof.HprofTypes")
-
 enum class RecordType(val tag: UByte) {
     UTF8(0x01u),
     LOAD_CLASS(0x02u),
@@ -24,14 +20,14 @@ enum class RecordType(val tag: UByte) {
 
     companion object {
         const val TYPE_LIMIT = 100
-        private val TYPE_NAMES = RecordType.values().map { e -> e.tag.toInt() to e.name }.toMap()
-        private val TYPE_LOOKUP = RecordType.values().map { e -> e.tag to e }.toMap()
+        private val TYPE_NAMES = values().associate { e -> e.tag.toInt() to e.name }
+        private val TYPE_LOOKUP = values().associateBy { e -> e.tag }
 
         fun typeName(type: Int): String = TYPE_NAMES[type]
             ?: "<record#${type}"
 
         fun valueOf(type: UByte): RecordType = TYPE_LOOKUP[type]
-            ?: throw IllegalArgumentException("no record type for ${type}")
+            ?: throw IllegalArgumentException("no record type for $type")
     }
 }
 
@@ -61,14 +57,14 @@ enum class SubRecordType(val tag: UByte) {
 
     companion object {
         const val TYPE_LIMIT = 100
-        private val TYPE_NAMES = SubRecordType.values().map { e -> e.tag.toInt() to e.name }.toMap()
-        private val TYPE_LOOKUP = SubRecordType.values().map { e -> e.tag to e }.toMap()
+        private val TYPE_NAMES = values().associate { e -> e.tag.toInt() to e.name }
+        private val TYPE_LOOKUP = values().associateBy { e -> e.tag }
 
         fun typeName(type: Int): String = TYPE_NAMES[type]
             ?: "<sub-type#${type}"
 
         fun valueOf(type: UByte): SubRecordType = TYPE_LOOKUP[type]
-            ?: throw IllegalArgumentException("no sub record type for ${type}")
+            ?: throw IllegalArgumentException("no sub record type for $type")
     }
 }
 
@@ -105,11 +101,10 @@ enum class HprofValueType(val tag: UByte, val size: kotlin.Byte) {
     Long(0x0Bu, 8);
 
     companion object {
-        private val TYPE_NAMES = HprofValueType.values().map { e -> e.tag.toInt() to e.name }.toMap()
-        private val TYPE_LOOKUP = HprofValueType.values().map { e -> e.tag to e }.toMap()
+        private val TYPE_LOOKUP = values().associateBy { e -> e.tag }
 
         fun valueOf(tag: UByte): HprofValueType = TYPE_LOOKUP[tag]
-            ?: throw IllegalArgumentException("no type for tag ${tag}")
+            ?: throw IllegalArgumentException("no type for tag $tag")
     }
 }
 

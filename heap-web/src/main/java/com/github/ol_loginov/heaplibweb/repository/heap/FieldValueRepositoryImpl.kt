@@ -14,14 +14,7 @@ internal class FieldValueRepositoryImpl(
     )
 
     override fun persistAll(entities: List<FieldValueEntity>) {
-        val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
-        jdbc.batchUpdate(
-            """
-                insert into FieldValue(instanceId, fieldId, value, valueInstanceId) 
-                values(:instanceId, :fieldId, :value, :valueInstanceId)
-            """,
-            batchParameters
-        )
+        MultiValuesInsert(jdbc, "FieldValue").execute(entities.map { persistQueryParameters(it) })
     }
 
     override fun persist(entity: FieldValueEntity) {

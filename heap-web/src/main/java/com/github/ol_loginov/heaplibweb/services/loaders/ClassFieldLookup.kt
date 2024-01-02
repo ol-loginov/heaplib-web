@@ -1,11 +1,9 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
-import com.github.ol_loginov.heaplibweb.repository.EntityIdentity
-import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import org.netbeans.lib.profiler.heap.Field
 import org.springframework.transaction.support.TransactionOperations
-import java.util.stream.Collectors
+import kotlin.streams.asSequence
 
 internal class ClassFieldLookup(
     private val scope: HeapScope,
@@ -14,9 +12,11 @@ internal class ClassFieldLookup(
     private data class FieldKey(val declaringClassId: Long, val name: String, val isStatic: Boolean)
 
     private val fieldEntities: MutableMap<FieldKey, Int> by lazy {
-        scope.fields
-            .streamAll()
-            .collect(Collectors.toMap({ e: FieldEntity -> FieldKey(e.declaringClassId, e.name, e.staticFlag) }, EntityIdentity::id))
+        scope.fields.streamAll().use {
+            it.asSequence()
+                .associateBy({ FieldKey(it.declaringClassId, it.name, it.staticFlag) }, { it.id })
+                .toMutableMap()
+        }
     }
 
     fun getFieldEntityId(field: Field): Int {

@@ -40,10 +40,8 @@ class JavaClassProxy(
         .toList()
 
     override fun getFields(): List<Field> = scope
-        .fields.streamAllByDeclaringClassIdOrderById(entity.id)
+        .fields.findAllByDeclaringClassIdOrderById(entity.id)
         .map { FieldProxy(it, scope) }
-        .toList()
-
 
     override fun getInstances(): List<Instance> = scope
         .instances.streamAllByJavaClassId(entity.id)

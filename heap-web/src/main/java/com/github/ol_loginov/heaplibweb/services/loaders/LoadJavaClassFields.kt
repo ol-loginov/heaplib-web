@@ -3,6 +3,7 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.support.pretty
 import org.springframework.transaction.support.TransactionOperations
 import java.util.function.Consumer
 
@@ -15,7 +16,7 @@ internal class LoadJavaClassFields(
     private var classCount = 0
     private var fieldsLoaded = 0
 
-    override fun getText(): String = "import class fields: $passed/$classCount classes (fields=${fieldsLoaded})"
+    override fun getText(): String = "import class fields: ${passed.pretty()}/${classCount.pretty()} classes (fields=${fieldsLoaded.pretty()})"
 
     override fun run(callback: Task.Callback) {
         classCount = classDumpLookup.classCount
@@ -23,7 +24,7 @@ internal class LoadJavaClassFields(
 
         callback.saveProgress(this, true)
 
-        val insert = InsertCollector(1000) { list ->
+        val insert = InsertCollector("fields") { list ->
             transactionOperations.executeWithoutResult { _ ->
                 heapScope.fields.persistAll(list)
             }

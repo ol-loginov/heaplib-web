@@ -26,6 +26,7 @@ class InputLoader @Inject constructor(
 ) : Runnable, Task.Callback {
     companion object {
         private val log = LoggerFactory.getLogger(InputLoader::class.java)
+        private const val logPeriodMs = 5000L
     }
 
     private var loadPrimitiveArrayItems: Boolean = false
@@ -55,7 +56,7 @@ class InputLoader @Inject constructor(
     }
 
     override fun saveProgress(loadMessage: String, force: Boolean) {
-        if (!force && Duration.between(progressSaved, Instant.now()).toMillis() < 1000) {
+        if (!force && Duration.between(progressSaved, Instant.now()).toMillis() < logPeriodMs) {
             return
         }
         val progress = if (progressLimit > 0) (1000 * (progressCurrent / progressLimit.toDouble())).roundToInt() else 0
@@ -89,7 +90,6 @@ class InputLoader @Inject constructor(
             }
         }
     }
-
 
     @Throws(IOException::class)
     private fun runUnsafe() {

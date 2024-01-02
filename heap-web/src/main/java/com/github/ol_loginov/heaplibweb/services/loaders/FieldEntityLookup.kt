@@ -10,13 +10,13 @@ internal class FieldEntityLookup(
 
     fun getInstanceFieldList(classObjectId: ULong): List<FieldEntity> {
         return fields
-            .computeIfAbsent(classObjectId) { heapScope.fields.streamAllByDeclaringClassIdOrderById(classObjectId.toLong()).toList() }
+            .computeIfAbsent(classObjectId) { heapScope.fields.findAllByDeclaringClassIdOrderById(classObjectId.toLong()) }
             .filter { !it.staticFlag }
     }
 
     fun getStaticFieldList(classObjectId: ULong): List<FieldEntity> {
         return fields
-            .computeIfAbsent(classObjectId) { heapScope.fields.streamAllByDeclaringClassIdOrderById(classObjectId.toLong()).toList() }
+            .computeIfAbsent(classObjectId) { heapScope.fields.findAllByDeclaringClassIdOrderById(classObjectId.toLong()) }
             .filter { it.staticFlag }
     }
 }

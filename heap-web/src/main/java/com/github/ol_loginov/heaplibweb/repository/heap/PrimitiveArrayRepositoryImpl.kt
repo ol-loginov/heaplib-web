@@ -16,7 +16,6 @@ internal class PrimitiveArrayRepositoryImpl(
     }
 
     override fun persistAll(entities: List<PrimitiveArrayEntity>) {
-        val batchParameters = entities.map { MapSqlParameterSource(persistQueryParameters(it)) }
-        jdbc.batchUpdate("insert into PrimitiveArray(instanceId, itemIndex, itemValue) values(:instanceId, :itemIndex, :itemValue)", batchParameters)
+        MultiValuesInsert(jdbc, "PrimitiveArray").execute(entities.map { persistQueryParameters(it) })
     }
 }

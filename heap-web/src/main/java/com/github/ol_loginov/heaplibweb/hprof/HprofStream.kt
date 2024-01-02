@@ -1,5 +1,6 @@
 package com.github.ol_loginov.heaplibweb.hprof
 
+import com.github.ol_loginov.heaplibweb.support.pretty
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.DataInputStream
@@ -7,6 +8,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.NumberFormat
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.io.path.inputStream
 
 /**
@@ -17,6 +19,7 @@ import kotlin.io.path.inputStream
 class HprofStream(private val file: Path) {
     companion object {
         private val log = LoggerFactory.getLogger(HprofStream::class.java)
+        private const val scanLogPeriodMs = 5000L
 
         const val HEAD_MARKER = "JAVA PROFILE 1.0.2"
     }
@@ -67,10 +70,10 @@ class HprofStream(private val file: Path) {
         }
     }
 
-    private fun logScanInfo(runnable: Runnable) {
-        if (log.isInfoEnabled && scanLogTime + 1000 < System.currentTimeMillis()) {
+    private fun logScanInfo(timeWatcher: AtomicLong, runnable: Runnable) {
+        if (log.isInfoEnabled && timeWatcher.get() + scanLogPeriodMs < System.currentTimeMillis()) {
             runnable.run()
-            scanLogTime = System.currentTimeMillis()
+            timeWatcher.set(System.currentTimeMillis())
         }
     }
 
@@ -83,11 +86,7 @@ class HprofStream(private val file: Path) {
     ) {
         fun passedRecordsInfo(): String = if (recordsCount == 0) "$recordsPassed" else "$recordsPassed/$recordsCount"
         fun passedDumpsInfo(): String = if (dumpsCount == 0) "$dumpsPassed" else "$dumpsPassed/$dumpsCount"
-        fun bytesReadString(bytes: Long): String {
-            val bytesReadStringFormat = NumberFormat.getIntegerInstance()
-            bytesReadStringFormat.isGroupingUsed = true
-            return bytesReadStringFormat.format(bytes) + " bytes"
-        }
+        fun bytesReadString(bytes: Long): String = bytes.pretty() + " bytes"
     }
 
     private fun scanRecords(reader: HprofStreamReader, recordVisitor: RecordVisitor?, dumpVisitor: HeapDumpVisitor?) {
@@ -98,6 +97,7 @@ class HprofStream(private val file: Path) {
         val typeCounters = IntArray(RecordType.TYPE_LIMIT)
         val bytesRead = reader.bytesRead
         val progress = ScanProgress(recordsCount, 0, dumpsCount, 0, 0)
+        val logTimer = AtomicLong(System.currentTimeMillis())
 
         do {
             val recordTag = RecordType.valueOf(reader.ubyte())
@@ -133,19 +133,18 @@ class HprofStream(private val file: Path) {
 
             reader.bytesRead += recordReader.bytesRead
             progress.bytesRead = reader.bytesRead
+
+            logScanInfo(logTimer) {
+                val typeNameCounters = typeCounters
+                    .mapIndexed { i, v -> i to v }
+                    .filter { pair -> pair.second > 0 }
+                    .associate { pair -> RecordType.typeName(pair.first) to pair.second.pretty() }
+                val scanFinish = System.currentTimeMillis()
+                log.info("scan records complete ({} bytes read in {} sec): {}", (reader.bytesRead - bytesRead).pretty(), ((scanFinish - scanStart) / 1000.0).pretty(), typeNameCounters)
+            }
         } while (reader.available())
 
         progress.recordsPassed += typeCounters.sum()
-
-        // code below - just to make pretty log entry
-        logScanInfo {
-            val typeNameCounters = typeCounters
-                .mapIndexed { i, v -> i to v }
-                .filter { pair -> pair.second > 0 }
-                .associate { pair -> RecordType.typeName(pair.first) to pair.second }
-            val scanFinish = System.currentTimeMillis()
-            log.info("scan records complete {} ({} bytes read in {} sec): {}", progress.bytesReadString(reader.bytesRead), reader.bytesRead - bytesRead, (scanFinish - scanStart) / 1000.0, typeNameCounters)
-        }
 
         recordsCount = progress.recordsPassed
         if (progress.dumpsPassed > 0) {
@@ -156,6 +155,7 @@ class HprofStream(private val file: Path) {
     private fun scanDumpSubRecords(reader: HprofStreamReader, visitor: HeapDumpVisitor, progress: ScanProgress) {
         val typeCounters = IntArray(SubRecordType.TYPE_LIMIT)
         val scanStart = System.currentTimeMillis()
+        val logTimer = AtomicLong(System.currentTimeMillis())
 
         while (reader.available()) {
             val subRecordType = SubRecordType.valueOf(reader.ubyte())
@@ -181,13 +181,13 @@ class HprofStream(private val file: Path) {
         progress.dumpsPassed += typeCounters.sum()
 
         // code below - just to make pretty log entry
-        logScanInfo {
+        logScanInfo(logTimer) {
             val typeNameCounters = typeCounters
                 .mapIndexed { i, v -> i to v }
                 .filter { pair -> pair.second > 0 }
                 .associate { pair -> SubRecordType.typeName(pair.first) to pair.second }
             val scanFinish = System.currentTimeMillis()
-            log.info("scan sub-records complete {} (read in {} sec): {}", progress.bytesReadString(progress.bytesRead + reader.bytesRead), (scanFinish - scanStart) / 1000.0, typeNameCounters)
+            log.info("scan sub-records complete {} (read in {} sec): {}", progress.bytesReadString(progress.bytesRead + reader.bytesRead), ((scanFinish - scanStart) / 1000.0).pretty(), typeNameCounters)
         }
     }
 
