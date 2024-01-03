@@ -38,10 +38,11 @@ class HprofStreamBTest {
     @Disabled("manual execution")
     fun hugeScanDumps() {
         val hugeDumpFile = Path(environment.get("test.huge-dump") ?: throw IllegalStateException("expected 'test.huge-dump' to have a file path"))
-        val (instances, pArray, oArray) = testScanDumps(hugeDumpFile, 3)
-        assertThat(instances / 10).isEqualTo(19248L)
-        assertThat(pArray / 10).isEqualTo(10379L)
-        assertThat(oArray / 10).isEqualTo(2871L)
+        val iterations = 4
+        val (instances, pArray, oArray) = testScanDumps(hugeDumpFile, iterations)
+        assertThat(instances / iterations).isEqualTo(183848756L)
+        assertThat(pArray / iterations).isEqualTo(23501490L)
+        assertThat(oArray / iterations).isEqualTo(10911562L)
     }
 
     private fun testScanDumps(file: Path, iterations: Int): Array<Long> {
