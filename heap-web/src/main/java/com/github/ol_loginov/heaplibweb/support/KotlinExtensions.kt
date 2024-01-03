@@ -18,3 +18,6 @@ fun Int.pretty(): String = prettyNumber.format(this)
 fun Long.pretty(): String = prettyNumber.format(this)
 fun Float.pretty(): String = prettyNumber.format(this)
 fun Double.pretty(): String = prettyNumber.format(this)
+
+fun Any.void(): Unit {}
+

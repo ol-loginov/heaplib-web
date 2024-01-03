@@ -31,7 +31,7 @@ class HprofStream(private val file: Path) {
     private var dumpsCount: Int = 0
     private var scanLogTime: Long = System.currentTimeMillis()
 
-    private fun openDataStream(): DataInputStream = DataInputStream(BufferedInputStream(file.inputStream(), 25_000_000))
+    private fun openDataStream(): DataInputStream = DataInputStream(BufferedInputStream(file.inputStream(), 50 * 1024 * 1024))
 
     private fun scanHead(data: DataInputStream) {
         val marker = data.readNBytes(HEAD_MARKER.length).toString(StandardCharsets.US_ASCII)
