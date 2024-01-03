@@ -53,6 +53,7 @@ class HprofStreamBTest {
         val hprof = HprofStream(file)
         val stopWatch = StopWatch(file.toString())
         for (i in 1..iterations) {
+            log.info("*************** iteration $i **********************")
             stopWatch.start("test $i")
             hprof.scanDumps(object : DumpReceiver {
                 override fun onInstance(dump: InstanceDump, fieldReader: InstanceFieldReader) = instances.incrementAndGet().void()
