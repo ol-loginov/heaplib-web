@@ -68,13 +68,17 @@ class HprofStreamBTest {
     }
 
     @Test
-    fun scrollTestumDump() {
-        val (instances, pArray, oArray) = testScanDumps(
-            TestTool.getResourceFile("heapdumps/testum-1703615978111.hprof").toPath(),
-            10
-        )
-        assertThat(instances / 10).isEqualTo(19248L)
-        assertThat(pArray / 10).isEqualTo(10379L)
-        assertThat(oArray / 10).isEqualTo(2871L)
+    fun testumScanDumps() {
+        val iterations = 10
+        val (instances, pArray, oArray) = testScanDumps(TestTool.getResourceFile("heapdumps/testum-1703615978111.hprof").toPath(), iterations)
+        assertThat(instances / iterations).isEqualTo(19248L)
+        assertThat(pArray / iterations).isEqualTo(10379L)
+        assertThat(oArray / iterations).isEqualTo(2871L)
+    }
+
+    @Test
+    fun testumScanDumps1() {
+        val iterations = 1
+        testScanDumps(TestTool.getResourceFile("heapdumps/testum-1703615978111.hprof").toPath(), iterations)
     }
 }
