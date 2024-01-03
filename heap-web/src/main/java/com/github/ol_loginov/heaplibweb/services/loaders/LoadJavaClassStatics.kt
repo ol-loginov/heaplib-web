@@ -11,7 +11,8 @@ internal class LoadJavaClassStatics(
     private val transactionOperations: TransactionOperations,
     private val heapScope: HeapScope,
     private val classDumpLookup: ClassDumpLookup,
-    private val fieldEntityLookup: FieldEntityLookup
+    private val fieldEntityLookup: FieldEntityLookup,
+    private val fieldNameLookup: FieldNameLookup
 ) : Task {
     private var classCount: Int = 0
     private var passed: Int = 0
@@ -40,11 +41,13 @@ internal class LoadJavaClassStatics(
     private fun insertStaticFields(dump: ClassDump, insert: (FieldValueEntity) -> Unit) {
         if (dump.staticFields.isEmpty()) return
 
-        val fields = fieldEntityLookup.getStaticFieldList(dump.classObjectId).associateBy { it.name }
+        val fields = fieldEntityLookup
+            .getStaticFieldList(dump.classObjectId)
+            .associateBy { it.nameId }
         dump.staticFields
             .filter { it.name.name != null }
             .forEach { value ->
-                fields[value.name.name]?.let { field ->
+                fields[fieldNameLookup.nameToId(value.name)]?.let { field ->
                     val fieldType = field.type
                     val (valueText, valueInstance) = if (fieldType == HprofValueType.Object) {
                         val instanceId = (value.value as ULong).toLong()

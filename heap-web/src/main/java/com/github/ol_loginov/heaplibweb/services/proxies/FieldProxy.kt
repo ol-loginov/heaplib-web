@@ -11,7 +11,7 @@ class FieldProxy(
     private val scope: HeapScope
 ) : Field {
     override fun getDeclaringClass(): JavaClass = JavaClassProxy.wrap(scope.classes.findByIdSure(entity.declaringClassId), scope)
-    override fun getName() = entity.name
+    override fun getName() = entity.nameId.toString()
     override fun isStatic() = entity.staticFlag
     override fun getType(): Type? = null
 }

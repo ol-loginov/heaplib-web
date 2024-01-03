@@ -15,11 +15,10 @@ import kotlin.io.path.inputStream
  * https://hg.openjdk.org/jdk6/jdk6/jdk/raw-file/tip/src/share/demo/jvmti/hprof/manual.html
  * https://hg.openjdk.org/jdk/jdk/file/9a73a4e4011f/src/hotspot/share/services/heapDumper.cpp
  */
-@OptIn(ExperimentalUnsignedTypes::class)
 class HprofStream(private val file: Path) {
     companion object {
         private val log = LoggerFactory.getLogger(HprofStream::class.java)
-        private const val scanLogPeriodMs = 5000L
+        private const val scanLogPeriodMs = 2000L
 
         const val HEAD_MARKER = "JAVA PROFILE 1.0.2"
     }
@@ -32,7 +31,7 @@ class HprofStream(private val file: Path) {
     private var dumpsCount: Int = 0
     private var scanLogTime: Long = System.currentTimeMillis()
 
-    private fun openDataStream(): DataInputStream = DataInputStream(BufferedInputStream(file.inputStream(), 10_000_000))
+    private fun openDataStream(): DataInputStream = DataInputStream(BufferedInputStream(file.inputStream(), 25_000_000))
 
     private fun scanHead(data: DataInputStream) {
         val marker = data.readNBytes(HEAD_MARKER.length).toString(StandardCharsets.US_ASCII)

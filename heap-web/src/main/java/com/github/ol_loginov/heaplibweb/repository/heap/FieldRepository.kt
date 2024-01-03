@@ -4,10 +4,10 @@ import java.util.stream.Stream
 
 interface FieldRepository {
     fun persist(entity: FieldEntity)
-    fun persistAll(batch: List<FieldEntity>)
+    fun persistAll(entities: List<FieldEntity>)
 
     fun findAllByDeclaringClassIdOrderById(declaringClassId: Long): List<FieldEntity>
-    fun streamAll(): Stream<FieldEntity>
+    fun streamAllOrderById(): Stream<FieldEntity>
 
     fun findById(id: Int): FieldEntity?
 }

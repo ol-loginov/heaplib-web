@@ -1,8 +1,15 @@
+create table Name
+(
+    id   int          not null auto_increment primary key,
+    name varchar(128) not null collate utf8mb4_0900_as_cs,
+    unique index Name_IX_N (name)
+) engine InnoDB;
+
 create table Class
 (
     id                  bigint       not null primary key,
     classLoaderObjectId bigint,
-    name                varchar(512) not null,
+    name                varchar(512) not null collate utf8mb4_0900_as_cs,
     allInstancesSize    bigint,
     array               bit(1),
     instanceSize        int,
@@ -14,12 +21,13 @@ create table Class
 
 create table Field
 (
-    id               int          not null auto_increment primary key,
-    declaringClassId bigint       not null,
-    name             varchar(128) not null,
-    staticFlag       bit(1)       not null,
-    typeTag          tinyint      not null,
-    foreign key Field_DC (declaringClassId) references Class (id)
+    id               int     not null auto_increment primary key,
+    declaringClassId bigint  not null,
+    nameId           int     not null,
+    staticFlag       bit(1)  not null,
+    typeTag          tinyint not null,
+    foreign key Field_DC (declaringClassId) references Class (id),
+    foreign key Field_N (nameId) references Name (id)
 ) engine InnoDB;
 
 create table Instance

@@ -4,13 +4,18 @@ import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity
 import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import com.github.ol_loginov.heaplibweb.support.pretty
+import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
 import java.util.function.Consumer
+
+private val log = LoggerFactory.getLogger(LoadJavaClassFields::class.java)
 
 internal class LoadJavaClassFields(
     private val transactionOperations: TransactionOperations,
     private val heapScope: HeapScope,
-    private val classDumpLookup: ClassDumpLookup
+    private val classDumpLookup: ClassDumpLookup,
+    private val fieldEntityLookup: FieldEntityLookup,
+    private val fieldNameLookup: FieldNameLookup
 ) : Task {
     private var passed = 0
     private var classCount = 0
@@ -38,6 +43,11 @@ internal class LoadJavaClassFields(
             }
         }
 
+        log.info("refresh fields set")
+        transactionOperations.executeWithoutResult { _ ->
+            fieldEntityLookup.refresh(heapScope)
+        }
+
         callback.saveProgress(this, true)
     }
 
@@ -45,14 +55,14 @@ internal class LoadJavaClassFields(
         for (field in clazz.instanceFields) {
             fieldsLoaded++
             consumer.accept(
-                FieldEntity(clazz.classObjectId.toLong(), field.name.orEmpty(), false, field.type.tag.toByte())
+                FieldEntity(clazz.classObjectId.toLong(), fieldNameLookup.nameToId(field.name), false, field.type.tag.toByte())
             )
         }
 
         for (field in clazz.staticFields) {
             fieldsLoaded++
             consumer.accept(
-                FieldEntity(clazz.classObjectId.toLong(), field.name.orEmpty(), true, field.type.tag.toByte())
+                FieldEntity(clazz.classObjectId.toLong(), fieldNameLookup.nameToId(field.name), true, field.type.tag.toByte())
             )
         }
     }

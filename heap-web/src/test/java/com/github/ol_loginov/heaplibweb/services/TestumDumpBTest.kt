@@ -5,6 +5,7 @@ import com.github.ol_loginov.heaplibweb.TestTool._when
 import com.github.ol_loginov.heaplibweb.boot_test.DatabaseTest
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
 import com.github.ol_loginov.heaplibweb.services.loaders.InputLoader
+import com.github.ol_loginov.heaplibweb.services.loaders.InsertCollector
 import com.github.ol_loginov.heaplibweb.services.proxies.HeapProxy
 import jakarta.inject.Inject
 import org.assertj.core.api.Assertions.assertThat
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.netbeans.lib.profiler.heap.HeapFactory2
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
@@ -19,6 +21,8 @@ import org.springframework.context.annotation.Primary
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ContextConfiguration
 import java.nio.file.Path
+
+private val log = LoggerFactory.getLogger(TestumDumpBTest::class.java)
 
 @ContextConfiguration(classes = [TestumDumpBTest.TestContext::class])
 class TestumDumpBTest : DatabaseTest() {
