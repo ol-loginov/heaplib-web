@@ -1,7 +1,6 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
-import com.github.ol_loginov.heaplibweb.hprof.ClassDump
-import com.github.ol_loginov.heaplibweb.hprof.HprofStream
+import com.github.ol_loginov.heaplibweb.hprof.HprofFile
 import com.github.ol_loginov.heaplibweb.repository.HeapFile
 import com.github.ol_loginov.heaplibweb.repository.HeapFileRepository
 import com.github.ol_loginov.heaplibweb.repository.HeapFileStatus
@@ -99,7 +98,7 @@ class InputLoader @Inject constructor(
 
         saveProgress("use hprof file: ${dump.absolutePath}", true)
 
-        val heapStream = HprofStream(dump.toPath())
+        val hprofFile = HprofFile(dump.toPath())
 
         saveProgress("create scope tables #${heapFile.id}", true)
         heapFile.generateTablePrefix()
@@ -120,11 +119,11 @@ class InputLoader @Inject constructor(
         val fieldNameLookup = FieldNameLookup()
 
         val stepList = listOf(
-            LoadJavaClasses(heapStream, transactionOperations, heapScope, classDumpLookup),
+            LoadJavaClasses(hprofFile, transactionOperations, heapScope, classDumpLookup),
             LoadFieldNames(transactionOperations, heapScope, classDumpLookup, fieldNameLookup),
             LoadJavaClassFields(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup, fieldNameLookup),
             LoadJavaClassStatics(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup, fieldNameLookup),
-            LoadDumps(heapStream, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
+            LoadDumps(hprofFile, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
             LoadInstanceCount(transactionOperations, heapScope, classCountCollector),
             LoadInstanceRoots(transactionOperations, heapScope, javaRootCollector)
         )

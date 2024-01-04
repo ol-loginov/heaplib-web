@@ -19,25 +19,16 @@ enum class RecordType(val tag: UByte) {
     HEAP_DUMP_END(0x2Cu);
 
     companion object {
-        const val TYPE_LIMIT = 100
+        val COUNT = values().size
+
         private val TYPE_NAMES = values().associate { e -> e.tag.toInt() to e.name }
         private val TYPE_LOOKUP = values().associateBy { e -> e.tag }
 
-        fun typeName(type: Int): String = TYPE_NAMES[type]
-            ?: "<record#${type}"
+        fun typeName(tag: Int): String = TYPE_NAMES[tag] ?: "<record#$tag"
 
-        fun valueOf(type: UByte): RecordType = TYPE_LOOKUP[type]
-            ?: throw IllegalArgumentException("no record type for $type")
+        fun byTag(tag: UByte) = TYPE_LOOKUP[tag] ?: throw IllegalArgumentException("no record type for $tag")
+        fun byOrdinal(ordinal: Int) = values()[ordinal]
     }
-}
-
-interface RecordVisitor {
-    fun onUTF8(reader: HprofStreamReader, length: Long) = skipRecord(reader, RecordType.UTF8, length)
-    fun onLoadClass(reader: HprofStreamReader, length: Long) = skipRecord(reader, RecordType.LOAD_CLASS, length)
-    fun onUnloadClass(reader: HprofStreamReader, length: Long) = skipRecord(reader, RecordType.UNLOAD_CLASS, length)
-    fun onFrame(reader: HprofStreamReader, length: Long) = skipRecord(reader, RecordType.FRAME, length)
-    fun onTrace(reader: HprofStreamReader, length: Long) = skipRecord(reader, RecordType.TRACE, length)
-    fun skipRecord(reader: HprofStreamReader, type: RecordType, length: Long) = reader.skip(length)
 }
 
 enum class SubRecordType(val tag: UByte) {
@@ -56,28 +47,25 @@ enum class SubRecordType(val tag: UByte) {
     GC_PRIM_ARRAY_DUMP(0x23u);
 
     companion object {
-        const val TYPE_LIMIT = 100
-        private val TYPE_NAMES = values().associate { e -> e.tag.toInt() to e.name }
+        val COUNT = SubRecordType.values().size
+
         private val TYPE_LOOKUP = values().associateBy { e -> e.tag }
 
-        fun typeName(type: Int): String = TYPE_NAMES[type]
-            ?: "<sub-type#${type}"
-
-        fun valueOf(type: UByte): SubRecordType = TYPE_LOOKUP[type]
-            ?: throw IllegalArgumentException("no sub record type for $type")
+        fun byTag(type: UByte): SubRecordType = TYPE_LOOKUP[type] ?: throw IllegalArgumentException("no sub record type for $type")
+        fun byOrdinal(ordinal: Int): SubRecordType = values()[ordinal]
     }
 }
 
 
 interface HeapRootVisitor {
     fun onRootUnknown(objectId: ULong) {}
-    fun onRootJniGlobal(objectId: ULong, jniGlobalRefId: ULong) {}
-    fun onRootJniLocal(objectId: ULong, threadSN: UInt, frame: UInt) {}
-    fun onRootThreadObject(objectId: ULong, threadSN: UInt, stackTraceSN: UInt) {}
-    fun onRootJavaFrame(objectId: ULong, threadSN: UInt, frame: UInt) {}
+    fun onRootJniGlobal(objectId: ULong) {}
+    fun onRootJniLocal(objectId: ULong) {}
+    fun onRootThreadObject(objectId: ULong) {}
+    fun onRootJavaFrame(objectId: ULong) {}
     fun onRootStickyClass(objectId: ULong) {}
-    fun onRootNativeStack(objectId: ULong, threadSN: UInt) {}
-    fun onRootThreadBlock(objectId: ULong, threadSN: UInt) {}
+    fun onRootNativeStack(objectId: ULong) {}
+    fun onRootThreadBlock(objectId: ULong) {}
     fun onRootMonitorUsed(objectId: ULong) {}
 }
 
@@ -92,7 +80,7 @@ enum class HprofValueType(val tag: UByte, val size: kotlin.Byte) {
     Array(0x01u, -1),
     Object(0x02u, -1),
     Boolean(0x04u, 1),
-    Char(0x05u, 1),
+    Char(0x05u, 2),
     Float(0x06u, 4),
     Double(0x07u, 8),
     Byte(0x08u, 1),
@@ -132,11 +120,11 @@ data class NamedValue(val name: StringRef, val type: HprofValueType, val value: 
 
 data class ClassDump(
     val classObjectId: ULong,
-    val starkTraceSN: UInt,
+//    val starkTraceSN: UInt,
     val superClassObjectId: ULong,
     val classLoaderObjectId: ULong,
-    val signersObjectId: ULong,
-    val domainObjectId: ULong,
+//    val signersObjectId: ULong,
+//    val domainObjectId: ULong,
     val instanceSize: UInt,
 
     val className: StringRef,

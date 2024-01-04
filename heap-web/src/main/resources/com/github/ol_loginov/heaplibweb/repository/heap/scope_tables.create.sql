@@ -57,7 +57,7 @@ create table PrimitiveArray
 (
     instanceId bigint not null,
     itemIndex  int    not null,
-    itemValue  text,
+    itemValue  varchar(32),
     primary key PrimitiveArray_PK (instanceId, itemIndex)
 ) engine InnoDB;
 

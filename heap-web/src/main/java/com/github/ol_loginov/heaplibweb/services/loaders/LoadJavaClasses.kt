@@ -1,17 +1,15 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
-import com.github.ol_loginov.heaplibweb.hprof.HprofStream
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.hprof.HprofFile
 import com.github.ol_loginov.heaplibweb.repository.heap.ClassEntity
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
-import java.util.concurrent.atomic.AtomicLong
-import java.util.function.Consumer
 
 internal class LoadJavaClasses(
-    private val heap: HprofStream,
+    private val hprof: HprofFile,
     private val transactionOperations: TransactionOperations,
     private val scope: HeapScope,
     private val classDumpLookup: ClassDumpLookup
@@ -40,7 +38,7 @@ internal class LoadJavaClasses(
         }
 
         insert.use {
-            val classes = heap.scanClasses()
+            val classes = hprof.scanClasses()
             classDumpLookup.putAll(classes)
             classCount = classDumpLookup.classCount
 

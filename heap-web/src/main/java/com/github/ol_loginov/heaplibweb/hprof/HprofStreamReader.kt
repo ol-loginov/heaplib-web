@@ -1,77 +1,26 @@
 package com.github.ol_loginov.heaplibweb.hprof
 
+import com.github.ol_loginov.heaplibweb.support.void
+import java.io.ByteArrayInputStream
 import java.io.DataInputStream
-import java.util.function.Supplier
 
-class HprofStreamReader(private val stream: DataInputStream, val idLength: Int, private val limit: Long? = null) {
-    fun limited(limit: Long): HprofStreamReader = HprofStreamReader(stream, idLength, limit)
+interface HprofStreamReader {
+    val position: Long
+    val identifierSize: Int
 
-    private val idReader = when (idLength) {
-        4 -> Supplier<ULong> { uint().toULong() }
-        8 -> Supplier<ULong> { ulong() }
-        else -> throw NotImplementedError("invalid size of identifiers ($idLength)")
-    }
-
-    var bytesRead = 0L
-
-    fun available() = if (limit != null) bytesRead < limit else stream.available() > 0
-
-    private fun incrementRead(length: Long) {
-        bytesRead += length
-        if (limit != null && bytesRead > limit) {
-            throw IllegalStateException("read too much (limit=$limit, read=$bytesRead")
-        }
-    }
-
-    fun skip(length: Long) {
-        var rest = length
-        while (rest > 0) {
-            val skipped = stream.skip(rest)
-            incrementRead(skipped)
-            rest -= skipped
-        }
-    }
-
-    fun uint() = int().toUInt()
-    fun int(): Int {
-        incrementRead(4)
-        return stream.readInt()
-    }
-
+    fun skip(length: Int)
+    fun uint(): UInt = int().toUInt()
+    fun int(): Int
     fun ulong(): ULong = long().toULong()
-    fun long(): Long {
-        incrementRead(8)
-        return stream.readLong()
-    }
-
+    fun long(): Long
     fun ubyte(): UByte = byte().toUByte()
-    fun byte(): Byte {
-        incrementRead(1)
-        return stream.readByte()
-    }
-
+    fun byte(): Byte
     fun ushort(): UShort = short().toUShort()
-    fun short(): Short {
-        incrementRead(2)
-        return stream.readShort()
-    }
-
-    fun char(): Char = Char(ushort())
-
-    fun float(): Float {
-        incrementRead(4)
-        return stream.readFloat()
-    }
-
-    fun double(): Double {
-        incrementRead(8)
-        return stream.readDouble()
-    }
-
-    fun id(): ULong {
-        return idReader.get()
-    }
-
+    fun short(): Short
+    fun char(): Char
+    fun float(): Float
+    fun double(): Double
+    fun id(): ULong
     fun type(): HprofValueType = when (val type = ubyte()) {
         HprofValueType.Boolean.tag -> HprofValueType.Boolean
         HprofValueType.Byte.tag -> HprofValueType.Byte
@@ -85,18 +34,183 @@ class HprofStreamReader(private val stream: DataInputStream, val idLength: Int, 
         else -> throw NotImplementedError("type $type is unknown")
     }
 
-    fun string(length: Long, noTerminalZero: Boolean = true): String {
-        val textBytes = if (noTerminalZero) length.toInt() else length.toInt() - 1
-        val restBytes = if (noTerminalZero) 0L else 1L
-
-        incrementRead(textBytes.toLong())
-        val text = stream.readNBytes(textBytes).toString(Charsets.UTF_8)
+    fun string(bytes: Long, noTerminalZero: Boolean = true): String = string(bytes.toInt(), noTerminalZero)
+    fun string(bytes: Int, noTerminalZero: Boolean = true): String {
+        val textBytes = if (noTerminalZero) bytes else bytes - 1
+        val restBytes = if (noTerminalZero) 0 else 1
+        val text = bytes(textBytes).toString(Charsets.UTF_8)
         skip(restBytes)
         return text
     }
 
-    fun bytes(length: Int): ByteArray {
-        incrementRead(length.toLong())
-        return stream.readNBytes(length)
+    fun bytes(n: Int): ByteArray
+}
+
+object IdentifierReader {
+    fun read(delegate: HprofStreamReader, identifierSize: Int) = when (identifierSize) {
+        4 -> delegate.int().toULong()
+        8 -> delegate.ulong()
+        else -> throw NotImplementedError("invalid identifier size - $identifierSize")
     }
+}
+
+class HprofFileReader(val stream: HprofFileSource, override val identifierSize: Int, initialPosition: Long) : HprofStreamReader {
+    override var position = initialPosition
+        private set
+
+    fun available() = stream.available() > 0
+
+    private fun forward(length: Int) {
+        position += length
+    }
+
+    override fun skip(length: Int) {
+        if (length == 0) return
+        forward(length)
+        stream.skipNBytes(length.toLong())
+    }
+
+    override fun int(): Int {
+        forward(4)
+        return stream.readInt()
+    }
+
+    override fun long(): Long {
+        forward(8)
+        return stream.readLong()
+    }
+
+    override fun byte(): Byte {
+        forward(1)
+        return stream.readByte()
+    }
+
+    override fun short(): Short {
+        forward(2)
+        return stream.readShort()
+    }
+
+    override fun char(): Char = Char(ushort())
+
+    override fun float(): Float {
+        forward(4)
+        return stream.readFloat()
+    }
+
+    override fun double(): Double {
+        forward(8)
+        return stream.readDouble()
+    }
+
+    override fun id(): ULong = IdentifierReader.read(this, identifierSize)
+
+    override fun bytes(n: Int): ByteArray {
+        forward(n)
+        return stream.readNBytes(n)
+    }
+}
+
+class HprofRecordReader(private val delegate: HprofFileReader) : HprofStreamReader {
+    override val identifierSize = delegate.identifierSize
+    val start = delegate.position
+    val end get() = start + 1 + 4 + 4 + length
+
+    @Suppress("JoinDeclarationAndAssignment")
+    val recordType: RecordType
+    val length: Long
+
+    init {
+        recordType = RecordType.byTag(delegate.ubyte())
+        @Suppress("UNUSED_VARIABLE")
+        val recordTimeOffset = delegate.uint()
+        length = delegate.uint().toLong()
+    }
+
+    override val position: Long
+        get() = delegate.position
+
+    fun available(): Boolean = delegate.position < start + length
+
+    private fun checkForward(bytes: Int) {
+        if (delegate.position + bytes > end) {
+            throw IllegalStateException("read too much")
+        }
+    }
+
+    override fun skip(length: Int) {
+        checkForward(length)
+        delegate.skip(length)
+    }
+
+    override fun int(): Int {
+        checkForward(4)
+        return delegate.int()
+    }
+
+    override fun long(): Long {
+        checkForward(8)
+        return delegate.long()
+    }
+
+    override fun byte(): Byte {
+        checkForward(1)
+        return delegate.byte()
+    }
+
+    override fun short(): Short {
+        checkForward(2)
+        return delegate.short()
+    }
+
+    override fun char(): Char {
+        checkForward(2)
+        return delegate.char()
+    }
+
+    override fun float(): Float {
+        checkForward(4)
+        return delegate.float()
+    }
+
+    override fun double(): Double {
+        checkForward(8)
+        return delegate.double()
+    }
+
+    override fun id(): ULong {
+        checkForward(identifierSize)
+        return delegate.id()
+    }
+
+    override fun string(bytes: Int, noTerminalZero: Boolean): String {
+        checkForward(bytes)
+        return delegate.string(bytes, noTerminalZero)
+    }
+
+    override fun bytes(n: Int): ByteArray {
+        checkForward(n)
+        return delegate.bytes(n)
+    }
+
+    fun skipToEnd() {
+        skip((end - delegate.position).toInt())
+    }
+}
+
+class HprofByteArrayReader(bytes: ByteArray, override val identifierSize: Int) : HprofStreamReader {
+    private val dis = DataInputStream(ByteArrayInputStream(bytes))
+
+    override val position: Long
+        get() = TODO("Not yet implemented")
+
+    override fun skip(length: Int) = dis.skip(length.toLong()).void()
+    override fun int(): Int = dis.readInt()
+    override fun long(): Long = dis.readLong()
+    override fun byte(): Byte = dis.readByte()
+    override fun short(): Short = dis.readShort()
+    override fun char(): Char = dis.readChar()
+    override fun float(): Float = dis.readFloat()
+    override fun double(): Double = dis.readDouble()
+    override fun id(): ULong = IdentifierReader.read(this, identifierSize)
+    override fun bytes(n: Int): ByteArray = dis.readNBytes(n)
 }

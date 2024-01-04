@@ -11,19 +11,19 @@ class JavaRootCollector : HeapRootVisitor {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_UNKNOWN) { a, b -> a and b }
     }
 
-    override fun onRootJniGlobal(objectId: ULong, jniGlobalRefId: ULong) {
+    override fun onRootJniGlobal(objectId: ULong) {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_JNI_GLOBAL) { a, b -> a and b }
     }
 
-    override fun onRootJniLocal(objectId: ULong, threadSN: UInt, frame: UInt) {
+    override fun onRootJniLocal(objectId: ULong) {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_JNI_LOCAL) { a, b -> a and b }
     }
 
-    override fun onRootThreadObject(objectId: ULong, threadSN: UInt, stackTraceSN: UInt) {
+    override fun onRootThreadObject(objectId: ULong) {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_THREAD_OBJECT) { a, b -> a and b }
     }
 
-    override fun onRootJavaFrame(objectId: ULong, threadSN: UInt, frame: UInt) {
+    override fun onRootJavaFrame(objectId: ULong) {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_JAVA_FRAME) { a, b -> a and b }
     }
 
@@ -31,11 +31,11 @@ class JavaRootCollector : HeapRootVisitor {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_STICKY_CLASS) { a, b -> a and b }
     }
 
-    override fun onRootNativeStack(objectId: ULong, threadSN: UInt) {
+    override fun onRootNativeStack(objectId: ULong) {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_NATIVE_STACK) { a, b -> a and b }
     }
 
-    override fun onRootThreadBlock(objectId: ULong, threadSN: UInt) {
+    override fun onRootThreadBlock(objectId: ULong) {
         objectRootFlags.merge(objectId, InstanceEntity.ROOT_THREAD_BLOCK) { a, b -> a and b }
     }
 

@@ -1,5 +1,6 @@
-package com.github.ol_loginov.heaplibweb.hprof
+package com.github.ol_loginov.heaplibweb.hprof.views
 
+import com.github.ol_loginov.heaplibweb.hprof.HprofValueType
 import java.io.ByteArrayInputStream
 import java.io.DataInputStream
 
