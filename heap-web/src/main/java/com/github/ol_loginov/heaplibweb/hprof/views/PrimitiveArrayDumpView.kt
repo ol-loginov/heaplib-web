@@ -1,8 +1,6 @@
 package com.github.ol_loginov.heaplibweb.hprof.views
 
 import com.github.ol_loginov.heaplibweb.hprof.*
-import java.io.ByteArrayInputStream
-import java.io.DataInputStream
 
 class PrimitiveArrayDumpView(reader: HprofStreamReader) : DumpView(reader, SubRecordType.GC_PRIM_ARRAY_DUMP) {
     private val _header = PrimitiveArrayDumpHeader()
@@ -12,7 +10,7 @@ class PrimitiveArrayDumpView(reader: HprofStreamReader) : DumpView(reader, SubRe
     val stackTraceSN get() = _header.read(reader).stackTraceSN
     val arrayItemCount get() = _header.read(reader).arrayItemCount
     val arrayItemType get() = _header.read(reader).arrayItemType
-    val arrayItems get() = _body.read(this, reader).items
+    val arrayItems get() = _body.read(this, reader).itemSequence
 
     override fun skip() {
         _body.skip(this, reader)
@@ -50,29 +48,34 @@ private class PrimitiveArrayDumpHeader {
     }
 }
 
+private class SequenceGenerator<A, T>(private val array: A, private val sequencer: (A) -> Sequence<T>) : () -> Sequence<T> {
+    override fun invoke(): Sequence<T> = sequencer(array)
+}
+
 private class PrimitiveArrayDumpBody {
     var ready = false
-    var items = listOf<Any>()
+    var itemSequence: () -> Sequence<Any> = { emptySequence() }
 
     fun clear() {
         ready = false
+        itemSequence = { emptySequence() }
     }
 
     fun read(view: PrimitiveArrayDumpView, reader: HprofStreamReader): PrimitiveArrayDumpBody {
         if (!ready) {
-            val count = view.arrayItemCount.toInt()
+            val count = view.arrayItemCount
             val bytes = reader.bytes(count * view.arrayItemType.size)
 
-            items = DataInputStream(ByteArrayInputStream(bytes)).use { data ->
+            itemSequence = InstanceFieldReader(bytes, reader.identifierSize).use { arrayReader ->
                 when (view.arrayItemType) {
-                    HprofValueType.Boolean -> IntRange(1, count).map { reader.ubyte() }
-                    HprofValueType.Char -> IntRange(1, count).map { reader.char() }
-                    HprofValueType.Float -> IntRange(1, count).map { reader.float() }
-                    HprofValueType.Double -> IntRange(1, count).map { reader.double() }
-                    HprofValueType.Byte -> IntRange(1, count).map { reader.byte() }
-                    HprofValueType.Short -> IntRange(1, count).map { reader.short() }
-                    HprofValueType.Int -> IntRange(1, count).map { reader.int() }
-                    HprofValueType.Long -> IntRange(1, count).map { reader.long() }
+                    HprofValueType.Boolean -> SequenceGenerator(BooleanArray(count) { arrayReader.ubyte() > 0U }) { it.asSequence() }
+                    HprofValueType.Char -> SequenceGenerator(CharArray(count) { arrayReader.char() }) { it.asSequence() }
+                    HprofValueType.Float -> SequenceGenerator(FloatArray(count) { arrayReader.float() }) { it.asSequence() }
+                    HprofValueType.Double -> SequenceGenerator(DoubleArray(count) { arrayReader.double() }) { it.asSequence() }
+                    HprofValueType.Byte -> SequenceGenerator(ByteArray(count) { arrayReader.byte() }) { it.asSequence() }
+                    HprofValueType.Short -> SequenceGenerator(ShortArray(count) { arrayReader.short() }) { it.asSequence() }
+                    HprofValueType.Int -> SequenceGenerator(IntArray(count) { arrayReader.int() }) { it.asSequence() }
+                    HprofValueType.Long -> SequenceGenerator(LongArray(count) { arrayReader.long() }) { it.asSequence() }
                     else -> throw NotImplementedError("Expect primitive type of array, got ${view.arrayItemType}")
                 }
             }

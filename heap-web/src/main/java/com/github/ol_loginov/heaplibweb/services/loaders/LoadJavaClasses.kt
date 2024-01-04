@@ -16,7 +16,8 @@ internal class LoadJavaClasses(
 ) : Task {
     companion object {
         private val log = LoggerFactory.getLogger(LoadJavaClasses::class.java)
-        private val ARRAY_JVM_PREFIX = Regex("^\\[+[ZCFDBSIJL]")
+        private val RE_ARRAY_JVM_PREFIX = Regex("^\\[+[ZCFDBSIJL]")
+        private val RE_SLASH = Regex("/")
         fun nullIfZero(long: Long): Long? = if (long == 0L) null else long
     }
 
@@ -33,7 +34,7 @@ internal class LoadJavaClasses(
         callback.saveProgress(this, true)
         val insert = InsertCollector("classes") { list ->
             transactionOperations.executeWithoutResult {
-                scope.classes.persistAll(list)
+                scope.classLoader.persistAll(list)
             }
         }
 
@@ -61,33 +62,37 @@ internal class LoadJavaClasses(
                 nullIfZero(clazz.classLoaderObjectId.toLong()),
                 unmangleJvmClassName(clazz.className.orEmpty()),
                 null,
-                null, // clazz.isArray,
+                clazz.className.orEmpty().startsWith('['), // clazz.isArray,
                 clazz.instanceSize.toInt(),
-                0, null, null
+                0, null,
+                nullIfZero(clazz.superClassObjectId.toLong())
             )
         )
     }
 
     private fun unmangleJvmClassName(className: String): String {
-        if (!className.startsWith('[')) return className
+        var out = className
+        if (className.startsWith('[')) {
+            val arrayMatch = RE_ARRAY_JVM_PREFIX.matchAt(className, 0) ?: return className
+            val arrayPrefix = arrayMatch.value
 
-        val arrayMatch = ARRAY_JVM_PREFIX.matchAt(className, 0) ?: return className
-        val arrayPrefix = arrayMatch.value
-
-        val tail = className.substring(arrayPrefix.length).trimEnd(';')
-        val depth = arrayPrefix.count { it == '[' }
-        val type = when (arrayPrefix.last()) {
-            'J' -> "long"
-            'I' -> "int"
-            'S' -> "short"
-            'B' -> "byte"
-            'D' -> "double"
-            'F' -> "float"
-            'C' -> "char"
-            'Z' -> "boolean"
-            'L' -> tail
-            else -> throw IllegalArgumentException("$arrayPrefix - invalid array prefix")
+            val tail = className.substring(arrayPrefix.length).trimEnd(';')
+            val depth = arrayPrefix.count { it == '[' }
+            val type = when (arrayPrefix.last()) {
+                'J' -> "long"
+                'I' -> "int"
+                'S' -> "short"
+                'B' -> "byte"
+                'D' -> "double"
+                'F' -> "float"
+                'C' -> "char"
+                'Z' -> "boolean"
+                'L' -> tail
+                else -> throw IllegalArgumentException("$arrayPrefix - invalid array prefix")
+            }
+            out = type + "[]".repeat(depth)
         }
-        return type + "[]".repeat(depth)
+
+        return out.replace(RE_SLASH, ".")
     }
 }

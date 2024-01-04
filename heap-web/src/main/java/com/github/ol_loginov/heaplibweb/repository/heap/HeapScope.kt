@@ -4,6 +4,8 @@ import org.netbeans.lib.profiler.heap.HeapOperationUnsupportedException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations
 import org.springframework.jdbc.core.simple.JdbcClient
 import java.nio.charset.StandardCharsets
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.function.LongSupplier
 
 class HeapScope(
@@ -32,15 +34,23 @@ class HeapScope(
         }
     }
 
-    val names: NameRepository by lazy { NameRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
-    val classes: ClassRepository by lazy { ClassRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
-    val fields: FieldRepository by lazy { FieldRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
-    val fieldValues: FieldValueRepository by lazy { FieldValueRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
-    val instances: InstanceRepository by lazy { InstanceRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
-    val primitiveArrayItems: PrimitiveArrayRepository by lazy { PrimitiveArrayRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
-    val objectArrayItems: ObjectArrayRepository by lazy { ObjectArrayRepositoryImpl(ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)) }
+    private val scopedJdbcClient = ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)
+    private val localFileFolder: Path = Paths.get(System.getProperty("java.io.tmpdir"))
 
-    fun executeTablesScript(scriptResource: String) {
+    val names: NameRepository by lazy { NameRepositoryImpl(scopedJdbcClient) }
+    val classes: ClassRepository by lazy { ClassRepositoryImpl(scopedJdbcClient) }
+    val classLoader: ClassLoader by lazy { ClassLoaderByLocalFile(localFileFolder, scopedJdbcClient) }
+    val fields: FieldRepository by lazy { FieldRepositoryImpl(scopedJdbcClient) }
+    val fieldValues: FieldValueRepository by lazy { FieldValueRepositoryImpl(scopedJdbcClient) }
+    val instances: InstanceRepository by lazy { InstanceRepositoryImpl(scopedJdbcClient) }
+    val primitiveArrayItems: PrimitiveArrayRepository by lazy { PrimitiveArrayRepositoryImpl(scopedJdbcClient) }
+    val objectArrayItems: ObjectArrayRepository by lazy { ObjectArrayRepositoryImpl(scopedJdbcClient) }
+
+    init {
+
+    }
+
+    private fun executeTablesScript(scriptResource: String) {
         val script = HeapScope::class.java.getResourceAsStream(scriptResource).use {
             if (it == null)
                 throw IllegalStateException("create scope tables script is not available");

@@ -8,7 +8,8 @@ interface HprofStreamReader {
     val position: Long
     val identifierSize: Int
 
-    fun skip(length: Int)
+    fun skip(n: Int) = skip(n.toLong())
+    fun skip(n: Long)
     fun uint(): UInt = int().toUInt()
     fun int(): Int
     fun ulong(): ULong = long().toULong()
@@ -37,13 +38,13 @@ interface HprofStreamReader {
     fun string(bytes: Long, noTerminalZero: Boolean = true): String = string(bytes.toInt(), noTerminalZero)
     fun string(bytes: Int, noTerminalZero: Boolean = true): String {
         val textBytes = if (noTerminalZero) bytes else bytes - 1
-        val restBytes = if (noTerminalZero) 0 else 1
+        val restBytes = if (noTerminalZero) 0L else 1L
         val text = bytes(textBytes).toString(Charsets.UTF_8)
         skip(restBytes)
         return text
     }
 
-    fun bytes(n: Int): ByteArray
+    fun bytes(len: Int): ByteArray
 }
 
 object IdentifierReader {
@@ -60,14 +61,14 @@ class HprofFileReader(val stream: HprofFileSource, override val identifierSize: 
 
     fun available() = stream.available() > 0
 
-    private fun forward(length: Int) {
+    private fun forward(length: Long) {
         position += length
     }
 
-    override fun skip(length: Int) {
-        if (length == 0) return
-        forward(length)
-        stream.skipNBytes(length.toLong())
+    override fun skip(n: Long) {
+        if (n == 0L) return
+        forward(n)
+        stream.skipNBytes(n)
     }
 
     override fun int(): Int {
@@ -104,9 +105,9 @@ class HprofFileReader(val stream: HprofFileSource, override val identifierSize: 
 
     override fun id(): ULong = IdentifierReader.read(this, identifierSize)
 
-    override fun bytes(n: Int): ByteArray {
-        forward(n)
-        return stream.readNBytes(n)
+    override fun bytes(len: Int): ByteArray {
+        forward(len.toLong())
+        return stream.readNBytes(len)
     }
 }
 
@@ -131,15 +132,15 @@ class HprofRecordReader(private val delegate: HprofFileReader) : HprofStreamRead
 
     fun available(): Boolean = delegate.position < start + length
 
-    private fun checkForward(bytes: Int) {
+    private fun checkForward(bytes: Long) {
         if (delegate.position + bytes > end) {
             throw IllegalStateException("read too much")
         }
     }
 
-    override fun skip(length: Int) {
-        checkForward(length)
-        delegate.skip(length)
+    override fun skip(n: Long) {
+        checkForward(n)
+        delegate.skip(n)
     }
 
     override fun int(): Int {
@@ -178,22 +179,22 @@ class HprofRecordReader(private val delegate: HprofFileReader) : HprofStreamRead
     }
 
     override fun id(): ULong {
-        checkForward(identifierSize)
+        checkForward(identifierSize.toLong())
         return delegate.id()
     }
 
     override fun string(bytes: Int, noTerminalZero: Boolean): String {
-        checkForward(bytes)
+        checkForward(bytes.toLong())
         return delegate.string(bytes, noTerminalZero)
     }
 
-    override fun bytes(n: Int): ByteArray {
-        checkForward(n)
-        return delegate.bytes(n)
+    override fun bytes(len: Int): ByteArray {
+        checkForward(len.toLong())
+        return delegate.bytes(len)
     }
 
     fun skipToEnd() {
-        skip((end - delegate.position).toInt())
+        skip(end - delegate.position)
     }
 }
 
@@ -203,7 +204,7 @@ class HprofByteArrayReader(bytes: ByteArray, override val identifierSize: Int) :
     override val position: Long
         get() = TODO("Not yet implemented")
 
-    override fun skip(length: Int) = dis.skip(length.toLong()).void()
+    override fun skip(n: Long) = dis.skip(n).void()
     override fun int(): Int = dis.readInt()
     override fun long(): Long = dis.readLong()
     override fun byte(): Byte = dis.readByte()
@@ -212,5 +213,5 @@ class HprofByteArrayReader(bytes: ByteArray, override val identifierSize: Int) :
     override fun float(): Float = dis.readFloat()
     override fun double(): Double = dis.readDouble()
     override fun id(): ULong = IdentifierReader.read(this, identifierSize)
-    override fun bytes(n: Int): ByteArray = dis.readNBytes(n)
+    override fun bytes(len: Int): ByteArray = dis.readNBytes(len)
 }

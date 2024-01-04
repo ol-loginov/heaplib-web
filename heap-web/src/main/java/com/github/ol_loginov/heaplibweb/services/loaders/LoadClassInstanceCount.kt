@@ -4,7 +4,7 @@ import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.springframework.transaction.support.TransactionOperations
 
-class LoadInstanceCount(
+class LoadClassInstanceCount(
     private val transactionOperations: TransactionOperations,
     private val heapScope: HeapScope,
     private val classCountCollector: ClassCountCollector
@@ -15,6 +15,9 @@ class LoadInstanceCount(
     override fun getText(): String = "update instance count: ${passed.pretty()}/${total.pretty()}"
 
     override fun run(callback: Task.Callback) {
+        passed = 0
+        total = classCountCollector.counters.size
+
         val insert = InsertCollector("classes counts") { list ->
             transactionOperations.executeWithoutResult { heapScope.classes.updateCounts(list) }
         }
@@ -25,6 +28,7 @@ class LoadInstanceCount(
         insert.use {
             classCountCollector.counters.forEach { classObjectId, number ->
                 insert(classObjectId to number)
+                passed++
                 callback.saveProgress(task, false)
             }
         }

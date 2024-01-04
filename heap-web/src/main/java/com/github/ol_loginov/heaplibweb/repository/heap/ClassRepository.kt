@@ -3,9 +3,6 @@ package com.github.ol_loginov.heaplibweb.repository.heap
 import java.util.stream.Stream
 
 interface ClassRepository {
-    fun persist(entity: ClassEntity)
-    fun persistAll(entities: List<ClassEntity>)
-
     fun updateCounts(list: List<Pair<ULong, Int>>)
 
     fun findById(id: Long): ClassEntity?

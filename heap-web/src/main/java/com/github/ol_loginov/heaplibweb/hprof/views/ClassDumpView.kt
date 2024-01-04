@@ -13,30 +13,31 @@ class ClassDumpView(reader: HprofStreamReader) : DumpView(reader, SubRecordType.
     val instanceSize get() = _header.read(reader).instanceSize
 
     private val _constantPool = ClassDumpConstantPoolSection()
-    val constantPool: List<ValueRecord>
+    val constantPool: Array<ValueRecord>
         get() {
             _header.read(reader)
-            return _constantPool.read(reader).constantPool
+            return _constantPool.read(reader).items.toTypedArray()
         }
 
     private val _staticFields = ClassDumpStaticFieldsSection()
-    val staticFields: List<NamedValue>
+    val staticFields: Array<NamedValue>
         get() {
             _header.read(reader)
             _constantPool.read(reader)
-            return _staticFields.read(reader).staticFields
+            return _staticFields.read(reader).items.toTypedArray()
         }
+
     private val _instanceFields = ClassDumpInstanceFieldsSection()
-    val instanceFields: List<NamedType>
+    val instanceFields: Array<NamedType>
         get() {
             _header.read(reader)
             _constantPool.read(reader)
             _staticFields.read(reader)
-            return _instanceFields.read(reader).instanceFields
+            return _instanceFields.read(reader).items.toTypedArray()
         }
 
     override fun skip() {
-        if (!_header.ready) reader.skip(_header.length(reader))
+        if (!_header.ready) reader.skip(_header.length(reader).toLong())
         _constantPool.read(reader)
         _staticFields.read(reader)
         _instanceFields.read(reader)
@@ -101,11 +102,11 @@ private fun readValueRecord(reader: HprofStreamReader): ValueRecord {
 
 private class ClassDumpConstantPoolSection {
     var ready = false
-    val constantPool = mutableListOf<ValueRecord>()
+    val items = mutableListOf<ValueRecord>()
 
     fun clear() {
         ready = false
-        constantPool.clear()
+        items.clear()
     }
 
     fun read(reader: HprofStreamReader): ClassDumpConstantPoolSection {
@@ -113,7 +114,7 @@ private class ClassDumpConstantPoolSection {
             val count = reader.ushort().toInt()
             for (constantPoolIt in 0 until count) {
                 reader.ushort()
-                constantPool.add(readValueRecord(reader))
+                items.add(readValueRecord(reader))
             }
             ready = true
         }
@@ -123,11 +124,11 @@ private class ClassDumpConstantPoolSection {
 
 private class ClassDumpStaticFieldsSection {
     var ready = false
-    val staticFields = mutableListOf<NamedValue>()
+    val items = mutableListOf<NamedValue>()
 
     fun clear() {
         ready = false
-        staticFields.clear()
+        items.clear()
     }
 
     fun read(reader: HprofStreamReader): ClassDumpStaticFieldsSection {
@@ -135,7 +136,7 @@ private class ClassDumpStaticFieldsSection {
             for (i in 0 until reader.ushort().toInt()) {
                 val name = reader.id()
                 val value = readValueRecord(reader)
-                staticFields.add(NamedValue(StringRef(name), value.type, value.content))
+                items.add(NamedValue(StringRef(name), value.type, value.content))
             }
             ready = true
         }
@@ -145,18 +146,18 @@ private class ClassDumpStaticFieldsSection {
 
 private class ClassDumpInstanceFieldsSection {
     var ready = false
-    val instanceFields = mutableListOf<NamedType>()
+    val items = mutableListOf<NamedType>()
 
     fun clear() {
         ready = false
-        instanceFields.clear()
+        items.clear()
     }
 
     fun read(reader: HprofStreamReader): ClassDumpInstanceFieldsSection {
         if (!ready) {
             for (i in 0 until reader.ushort().toInt()) {
                 val name = reader.id()
-                instanceFields.add(NamedType(StringRef(name), reader.type()))
+                items.add(NamedType(StringRef(name), reader.type()))
             }
             ready = true
         }

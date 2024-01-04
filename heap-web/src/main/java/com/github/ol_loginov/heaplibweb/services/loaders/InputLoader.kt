@@ -123,9 +123,9 @@ class InputLoader @Inject constructor(
             LoadFieldNames(transactionOperations, heapScope, classDumpLookup, fieldNameLookup),
             LoadJavaClassFields(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup, fieldNameLookup),
             LoadJavaClassStatics(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup, fieldNameLookup),
-            LoadDumps(hprofFile, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
-            LoadInstanceCount(transactionOperations, heapScope, classCountCollector),
-            LoadInstanceRoots(transactionOperations, heapScope, javaRootCollector)
+            LoadInstances(hprofFile, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
+            LoadClassInstanceCount(transactionOperations, heapScope, classCountCollector),
+            LoadInstanceRootFlags(transactionOperations, heapScope, javaRootCollector)
         )
 
         stepList.forEach {

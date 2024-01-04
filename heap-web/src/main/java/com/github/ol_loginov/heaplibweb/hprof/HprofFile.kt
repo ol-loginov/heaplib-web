@@ -60,7 +60,7 @@ class HprofFile(private val file: Path) {
     }
 
     fun scanClasses(): List<ClassDump> {
-        log.info("visit load class records")
+        log.info("scan classes :: visit load class records")
         val classNames = mutableMapOf<ULong, StringRef>()
         scanRecords(object : RecordVisitor {
             override fun onLoadClass(view: LoadClassRecordView) {
@@ -68,7 +68,7 @@ class HprofFile(private val file: Path) {
             }
         })
 
-        log.info("visit class dumps")
+        log.info("scan classes :: visit class dumps")
         val classDumps = mutableMapOf<ULong, ClassDump>()
         scanDumps(object : DumpVisitor {
             override fun onClassDump(view: ClassDumpView) {
@@ -80,22 +80,21 @@ class HprofFile(private val file: Path) {
             }
         })
 
-        log.info("update class names")
+        log.info("scan classes :: update class names")
         val records = classDumps.values.toMutableList()
-        val stringReferences = mutableMapOf<ULong, MutableSet<Int>>()
 
-        fun addReference(stringId: ULong, entityIndex: Int) {
-            stringReferences.computeIfAbsent(stringId) { mutableSetOf() }.add(entityIndex)
+        data class StringReference(val recordIndex: Int, val inName: Boolean = false, val inInstanceFields: Int = -1, val inStaticFields: Int = -1)
+
+        val stringReferences = mutableMapOf<ULong, MutableSet<StringReference>>()
+
+        fun addReference(stringId: ULong, reference: StringReference) {
+            stringReferences.computeIfAbsent(stringId) { mutableSetOf() }.add(reference)
         }
 
-        for ((index, v) in records.withIndex()) {
-            addReference(v.className.id, index)
-            v.instanceFields.forEach { t ->
-                addReference(t.name.id, index)
-            }
-            v.staticFields.forEach { t ->
-                addReference(t.name.id, index)
-            }
+        for ((recordIndex, v) in records.withIndex()) {
+            addReference(v.className.id, StringReference(recordIndex, inName = true))
+            v.instanceFields.forEachIndexed { fieldIndex, t -> addReference(t.name.id, StringReference(recordIndex, inInstanceFields = fieldIndex)) }
+            v.staticFields.forEachIndexed { fieldIndex, t -> addReference(t.name.id, StringReference(recordIndex, inStaticFields = fieldIndex)) }
         }
 
         scanRecords(object : RecordVisitor {
@@ -104,14 +103,12 @@ class HprofFile(private val file: Path) {
                 val indices = stringReferences.remove(id) ?: return
 
                 val name = StringRef(id, view.string)
-                indices.forEach { index ->
-                    var entry = records[index]
-                    if (entry.className.id == id) {
-                        entry = entry.copy(className = name)
-                    }
-                    entry = entry.copy(staticFields = entry.staticFields.map { if (it.name.id == id) it.copy(name = name) else it })
-                    entry = entry.copy(instanceFields = entry.instanceFields.map { if (it.name.id == id) it.copy(name = name) else it })
-                    records[index] = entry
+                indices.forEach { ref ->
+                    var entry = records[ref.recordIndex]
+                    if (ref.inName) entry = entry.copy(className = name)
+                    if (ref.inStaticFields >= 0) entry.staticFields[ref.inStaticFields] = entry.staticFields[ref.inStaticFields].copy(name = name)
+                    if (ref.inInstanceFields >= 0) entry.instanceFields[ref.inInstanceFields] = entry.instanceFields[ref.inInstanceFields].copy(name = name)
+                    records[ref.recordIndex] = entry
                 }
             }
         })

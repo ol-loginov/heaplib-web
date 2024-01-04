@@ -20,5 +20,5 @@ class InstanceDumpView(reader: HprofStreamReader) : DumpView(reader, SubRecordTy
     private val bodyLength get() = _header.value.fourth
 
     fun hasFieldData(): Boolean = bodyLength > 0
-    fun getFieldReader() = InstanceFieldReader(_body.value)
+    fun getFieldReader() = InstanceFieldReader(_body.value, reader.identifierSize)
 }

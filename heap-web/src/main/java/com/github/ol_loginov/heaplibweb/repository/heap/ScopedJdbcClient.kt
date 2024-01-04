@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.jdbc.support.KeyHolder
 
-internal class ScopedJdbcClient(
+class ScopedJdbcClient(
     private val tablePrefix: String,
     private val delegate: JdbcClient,
     private val jdbcOperations: NamedParameterJdbcOperations

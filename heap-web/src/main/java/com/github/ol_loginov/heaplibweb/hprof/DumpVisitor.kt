@@ -99,9 +99,9 @@ abstract class DumpView(var reader: HprofStreamReader, val dumpType: SubRecordTy
     }
 
     abstract fun skip()
-    protected fun skip(length: Int, unless: Boolean) {
+    protected fun skip(n: Int, unless: Boolean) {
         if (unless) return
-        reader.skip(length)
+        reader.skip(n.toLong())
     }
 }
 

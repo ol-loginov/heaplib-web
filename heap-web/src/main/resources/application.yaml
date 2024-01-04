@@ -8,7 +8,7 @@ app:
     schema: heaplib
     user: heaplib
     password: heaplib
-    url: jdbc:mysql://${app.database.host}:${app.database.port}/${app.database.schema}
+    url: jdbc:mysql://${app.database.host}:${app.database.port}/${app.database.schema}?useUnicode=yes&characterEncoding=UTF-8&allowLoadLocalInfile=true
 
   #------------------------------------------------------------------------------------------------------------------------
   # input files path

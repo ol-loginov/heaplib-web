@@ -129,9 +129,9 @@ data class ClassDump(
 
     val className: StringRef,
 
-    val constantPool: List<ValueRecord>,
-    val staticFields: List<NamedValue>,
-    val instanceFields: List<NamedType>,
+    val constantPool: Array<ValueRecord>,
+    val staticFields: Array<NamedValue>,
+    val instanceFields: Array<NamedType>,
 )
 
 data class PrimitiveArrayDump(val objectId: ULong, val starkTraceSN: UInt, val type: HprofValueType, val array: List<Any>)

@@ -4,7 +4,7 @@ import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.springframework.transaction.support.TransactionOperations
 
-class LoadInstanceRoots(
+class LoadInstanceRootFlags(
     private val transactionOperations: TransactionOperations,
     private val heapScope: HeapScope,
     private val javaRootCollector: JavaRootCollector
@@ -15,6 +15,9 @@ class LoadInstanceRoots(
     override fun getText(): String = "update instance roots: ${passed.pretty()}/${total.pretty()}"
 
     override fun run(callback: Task.Callback) {
+        passed = 0
+        total = javaRootCollector.objectRootFlags.size
+
         val insert = InsertCollector("instance roots") { list ->
             transactionOperations.executeWithoutResult { heapScope.instances.updateRoots(list) }
         }
@@ -25,6 +28,7 @@ class LoadInstanceRoots(
         insert.use {
             javaRootCollector.objectRootFlags.forEach { classObjectId, number ->
                 insert(classObjectId to number)
+                passed++
                 callback.saveProgress(task, false)
             }
         }

@@ -9,7 +9,7 @@ import com.github.ol_loginov.heaplibweb.support.pretty
 import com.github.ol_loginov.heaplibweb.support.use
 import org.springframework.transaction.support.TransactionOperations
 
-internal class LoadDumps(
+internal class LoadInstances(
     private val hprof: HprofFile,
     private val transactionOperations: TransactionOperations,
     private val heapScope: HeapScope,
@@ -108,7 +108,7 @@ internal class LoadDumps(
             )
         )
         if (loadPrimitiveArrayItems) {
-            view.arrayItems
+            view.arrayItems()
                 .mapIndexed { index, item -> PrimitiveArrayEntity(view.arrayObjectId.toLong(), index, item.toString()) }
                 .forEach(arrayInsert)
         }
@@ -130,7 +130,8 @@ internal class LoadDumps(
             val fieldReader = dump.getFieldReader()
             var fieldDefiner: ClassDump? = classDump
             while (fieldReader.available() && fieldDefiner != null) {
-                fieldEntityLookup.getInstanceFieldList(fieldDefiner.classObjectId).forEach { field ->
+                val classFields = fieldEntityLookup.getInstanceFieldList(fieldDefiner.classObjectId)
+                for (field in classFields) {
                     val fieldType = field.type
                     val (valueText, valueInstance) = if (fieldType == HprofValueType.Object) {
                         val instanceId = fieldReader.ulong()
