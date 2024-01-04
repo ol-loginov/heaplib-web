@@ -23,8 +23,10 @@ internal class LoadInstances(
     private var instancesLoaded = 0
     private var primitiveArrays = 0
     private var objectArrays = 0
+    private var fieldsLoaded = 0
+    private var arrayItemsLoaded = 0
 
-    override fun getText() = "import instances: ${passed.pretty()} dumps (instances=${instancesLoaded.pretty()}, primitive arrays=${primitiveArrays.pretty()}, object arrays=${objectArrays.pretty()})"
+    override fun getText() = "import instances: ${passed.pretty()} dumps (instances=${instancesLoaded.pretty()}, primitive arrays=${primitiveArrays.pretty()}, object arrays=${objectArrays.pretty()}, field values=${fieldsLoaded.pretty()}, array items=${arrayItemsLoaded.pretty()})"
 
     override fun run(callback: Task.Callback) {
         passed = 0
@@ -32,16 +34,16 @@ internal class LoadInstances(
         callback.saveProgress(this, true)
 
         val instanceInsert = InsertCollector("instances") { list ->
-            transactionOperations.executeWithoutResult { heapScope.instances.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapScope.instanceLoader.persistAll(list) }
         }
         val fieldValuesInsert = InsertCollector("field values") { list ->
-            transactionOperations.executeWithoutResult { heapScope.fieldValues.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapScope.fieldValueLoader.persistAll(list) }
         }
         val primitiveArrayInsert = InsertCollector("primitive array items") { list ->
             transactionOperations.executeWithoutResult { heapScope.primitiveArrayItems.persistAll(list) }
         }
         val objectArrayInsert = InsertCollector("object array items") { list ->
-            transactionOperations.executeWithoutResult { heapScope.objectArrayItems.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapScope.objectArrayLoader.persistAll(list) }
         }
 
         val task = this
@@ -94,6 +96,7 @@ internal class LoadInstances(
             .mapIndexed { index, item -> ObjectArrayEntity(dump.objectId.toLong(), index, item.toLong()) }
             .filter { it.itemInstanceId > 0 }
             .forEach(arrayInsert)
+        arrayItemsLoaded += dump.arraySize
     }
 
     private fun persistPrimitiveArray(view: PrimitiveArrayDumpView, instanceInsert: (InstanceEntity) -> Unit, arrayInsert: (PrimitiveArrayEntity) -> Unit) {
@@ -111,6 +114,7 @@ internal class LoadInstances(
             view.arrayItems()
                 .mapIndexed { index, item -> PrimitiveArrayEntity(view.arrayObjectId.toLong(), index, item.toString()) }
                 .forEach(arrayInsert)
+            arrayItemsLoaded += view.arrayItemCount
         }
     }
 
@@ -133,14 +137,14 @@ internal class LoadInstances(
                 val classFields = fieldEntityLookup.getInstanceFieldList(fieldDefiner.classObjectId)
                 for (field in classFields) {
                     val fieldType = field.type
-                    val (valueText, valueInstance) = if (fieldType == HprofValueType.Object) {
-                        val instanceId = fieldReader.ulong()
-                        instanceId.toString() to instanceId
-                    } else {
-                        fieldReader.primitiveText(fieldType) to 0UL
-                    }
+                    val valueAny = fieldReader.any(fieldType)
 
-                    val fieldValueEntity = FieldValueEntity(dump.objectId.toLong(), field.id, valueText, valueInstance.toLong())
+                    val fieldValueEntity = FieldValueEntity(
+                        dump.objectId.toLong(), field.id,
+                        FieldValueEntity.anyToValueText(fieldType, valueAny),
+                        if (fieldType == HprofValueType.Object) (valueAny as ULong).toLong() else 0L
+                    )
+                    fieldsLoaded++
                     fieldEntitySaver(fieldValueEntity)
                 }
                 fieldDefiner = if (fieldDefiner.superClassObjectId == 0UL) null else classDumpLookup.lookup(fieldDefiner.superClassObjectId)

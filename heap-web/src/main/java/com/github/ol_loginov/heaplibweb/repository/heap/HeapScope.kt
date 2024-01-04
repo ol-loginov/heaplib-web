@@ -1,53 +1,42 @@
 package com.github.ol_loginov.heaplibweb.repository.heap
 
-import org.netbeans.lib.profiler.heap.HeapOperationUnsupportedException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations
 import org.springframework.jdbc.core.simple.JdbcClient
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.function.LongSupplier
 
 class HeapScope(
     private val tablePrefix: String,
     private val jdbc: JdbcClient,
-    private val jdbcOperations: NamedParameterJdbcOperations
+    jdbcOperations: NamedParameterJdbcOperations,
+    private val insertByLoadLocalFile: Boolean = true
 ) {
-    companion object {
-        const val NUMBER_NOT_READY = -1
-
-        @JvmStatic
-        fun shouldBeReady(entityAttribute: Int): Int {
-            if (entityAttribute == NUMBER_NOT_READY) {
-                throw UnsupportedOperationException("number not ready")
-            }
-            return entityAttribute
-        }
-
-        @JvmStatic
-        fun notReadyValueOnError(supplier: LongSupplier): Long {
-            try {
-                return supplier.getAsLong();
-            } catch (e: HeapOperationUnsupportedException) {
-                return NUMBER_NOT_READY.toLong()
-            }
-        }
-    }
-
     private val scopedJdbcClient = ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)
     private val localFileFolder: Path = Paths.get(System.getProperty("java.io.tmpdir"))
 
     val names: NameRepository by lazy { NameRepositoryImpl(scopedJdbcClient) }
     val classes: ClassRepository by lazy { ClassRepositoryImpl(scopedJdbcClient) }
-    val classLoader: ClassLoader by lazy { ClassLoaderByLocalFile(localFileFolder, scopedJdbcClient) }
+    val classLoader: ClassLoader by lazy {
+        if (insertByLoadLocalFile) ClassLoaderByLocalFile(localFileFolder, scopedJdbcClient)
+        else ClassLoaderByInsert(scopedJdbcClient)
+    }
     val fields: FieldRepository by lazy { FieldRepositoryImpl(scopedJdbcClient) }
     val fieldValues: FieldValueRepository by lazy { FieldValueRepositoryImpl(scopedJdbcClient) }
+    val fieldValueLoader: FieldValueLoader by lazy {
+        if (insertByLoadLocalFile) FieldValueLoaderByLocalFile(localFileFolder, scopedJdbcClient)
+        else FieldValueLoaderByInsert(scopedJdbcClient)
+    }
     val instances: InstanceRepository by lazy { InstanceRepositoryImpl(scopedJdbcClient) }
+    val instanceLoader: InstanceLoader by lazy {
+        if (insertByLoadLocalFile) InstanceLoaderByLocalFile(localFileFolder, scopedJdbcClient)
+        else InstanceLoaderByInsert(scopedJdbcClient)
+    }
     val primitiveArrayItems: PrimitiveArrayRepository by lazy { PrimitiveArrayRepositoryImpl(scopedJdbcClient) }
     val objectArrayItems: ObjectArrayRepository by lazy { ObjectArrayRepositoryImpl(scopedJdbcClient) }
-
-    init {
-
+    val objectArrayLoader: ObjectArrayLoader by lazy {
+        if (insertByLoadLocalFile) ObjectArrayLoaderByLocalFile(localFileFolder, scopedJdbcClient)
+        else ObjectArrayLoaderByInsert(scopedJdbcClient)
     }
 
     private fun executeTablesScript(scriptResource: String) {

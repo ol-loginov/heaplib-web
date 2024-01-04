@@ -28,6 +28,19 @@ class InstanceFieldReader(byteArray: ByteArray, override val identifierSize: Int
         else -> throw IllegalArgumentException("type $valueType is not primitive")
     }.toString()
 
+    fun any(valueType: HprofValueType): Any = when (valueType) {
+        HprofValueType.Object -> id()
+        HprofValueType.Float -> float()
+        HprofValueType.Double -> double()
+        HprofValueType.Boolean -> boolean()
+        HprofValueType.Char -> char()
+        HprofValueType.Byte -> byte()
+        HprofValueType.Short -> short()
+        HprofValueType.Int -> int()
+        HprofValueType.Long -> long()
+        else -> throw IllegalArgumentException("type $valueType is not primitive")
+    }
+
     override fun id(): ULong = IdentifierReader.read(this, identifierSize)
     override fun float(): Float = dataInput.readFloat()
     override fun double(): Double = dataInput.readDouble()

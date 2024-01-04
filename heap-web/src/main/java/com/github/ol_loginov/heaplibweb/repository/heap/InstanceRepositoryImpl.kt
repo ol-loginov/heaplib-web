@@ -6,26 +6,6 @@ import java.util.stream.Stream
 internal class InstanceRepositoryImpl(
     private val jdbc: ScopedJdbcClient
 ) : InstanceRepository {
-    private fun persistQueryParameters(entity: InstanceEntity) = mapOf(
-        "instanceId" to entity.instanceId,
-        "instanceNumber" to entity.instanceNumber,
-        "javaClassId" to entity.javaClassId,
-        "rootTag" to entity.rootTag,
-        "size" to entity.size,
-        "arrayTypeTag" to entity.arrayTypeTag,
-        "arrayLength" to entity.arrayLength,
-        "retainedSize" to entity.retainedSize,
-        "reachableSize" to entity.reachableSize
-    )
-
-    override fun persist(entity: InstanceEntity) {
-        persistAll(listOf(entity))
-    }
-
-    override fun persistAll(entities: List<InstanceEntity>) {
-        MultiValuesInsert(jdbc, "Instance").execute(entities.map { persistQueryParameters(it) })
-    }
-
     override fun updateRoots(list: List<Pair<ULong, Short>>) {
         val batchParameters = list.map {
             MapSqlParameterSource(

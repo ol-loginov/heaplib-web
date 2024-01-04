@@ -26,7 +26,7 @@ internal class LoadJavaClassStatics(
         passed = 0
 
         val fieldValuesInsert = InsertCollector("field values") { list ->
-            transactionOperations.executeWithoutResult { heapScope.fieldValues.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapScope.fieldValueLoader.persistAll(list) }
         }
 
         fieldValuesInsert.use {
@@ -48,15 +48,11 @@ internal class LoadJavaClassStatics(
             .filter { it.name.name != null }
             .forEach { value ->
                 fields[fieldNameLookup.nameToId(value.name)]?.let { field ->
-                    val fieldType = field.type
-                    val (valueText, valueInstance) = if (fieldType == HprofValueType.Object) {
-                        val instanceId = (value.value as ULong).toLong()
-                        instanceId.toString() to instanceId
-                    } else {
-                        value.value.toString() to 0L
-                    }
-
-                    val fieldValueEntity = FieldValueEntity(dump.classObjectId.toLong(), field.id, valueText, valueInstance)
+                    val fieldValueEntity = FieldValueEntity(
+                        dump.classObjectId.toLong(), field.id,
+                        FieldValueEntity.anyToValueText(value.type, value.value),
+                        if (value.type == HprofValueType.Object) (value.value as ULong).toLong() else 0L
+                    )
                     insert(fieldValueEntity)
                     fieldsLoaded++
                 }
