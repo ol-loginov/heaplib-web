@@ -1,0 +1,12 @@
+Some test timings
+
+04/01/2023
+
+05:34:54.605 [DaemonThreadFactory-1] INFO  c.g.o.h.s.l.InputLoader - Step timings for HeapFile#1: total time - 8183.56 sec
+1) import java classes: 911,543/911,543 classes                                                                                                                         	146.668 sec
+2) import field names: 911,543/911,543 classes (names=131,605)                                                                                                          	4.707 sec
+3) import class fields: 911,543/911,543 classes (fields=3,315,724)                                                                                                      	109.66 sec
+4) import class statics: 911,543/911,543 classes (fields=2,126,684)                                                                                                     	17.705 sec
+5) import instances: 218,261,808 dumps (instances=183,848,756, primitive arrays=23,501,490, object arrays=10,911,562, field values=940,961,707, array items=137,000,265)	7883.177 sec
+6) update instance count: 249,307/249,307                                                                                                                               	19.599 sec
+7) update instance roots: 24,718/24,718                                                                                                                                 	2.044 sec

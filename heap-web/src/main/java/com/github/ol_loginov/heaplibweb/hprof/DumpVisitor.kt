@@ -36,7 +36,7 @@ inline fun <T : DumpView> visit(view: T, handler: (T) -> Unit) {
 class DumpVisit {
     companion object {
         val log = LoggerFactory.getLogger(DumpVisit::class.java)
-        val scanLogger = PeriodicLogger(2000L, log.isInfoEnabled)
+        val scanLogger = PeriodicLogger(10000L, log.isInfoEnabled)
     }
 
     fun visitAll(reader: HprofRecordReader, visitor: DumpVisitor) {

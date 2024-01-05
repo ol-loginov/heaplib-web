@@ -9,7 +9,7 @@ internal class InsertCollector<T>(
     private val batchSize: Int,
     private val finalizer: (List<T>) -> Unit
 ) : (T) -> Unit, AutoCloseable {
-    constructor(entityDescription: String, finalizer: (List<T>) -> Unit) : this(entityDescription, 1500, finalizer)
+    constructor(entityDescription: String, finalizer: (List<T>) -> Unit) : this(entityDescription, 50000, finalizer)
 
     private var queue = mutableListOf<T>()
 

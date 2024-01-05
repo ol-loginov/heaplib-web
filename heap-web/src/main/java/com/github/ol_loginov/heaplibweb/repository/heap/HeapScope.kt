@@ -10,6 +10,9 @@ class HeapScope(
     private val tablePrefix: String,
     private val jdbc: JdbcClient,
     jdbcOperations: NamedParameterJdbcOperations,
+    /**
+     * mysql> SET GLOBAL local_infile = 1;
+     */
     private val insertByLoadLocalFile: Boolean = true
 ) {
     private val scopedJdbcClient = ScopedJdbcClient(tablePrefix, jdbc, jdbcOperations)

@@ -7,8 +7,7 @@ import java.nio.file.Path
 import java.time.Instant
 
 private val log = LoggerFactory.getLogger(HprofFile::class.java)
-private val scanLogger = PeriodicLogger(2000L, log.isInfoEnabled)
-const val HEAD_MARKER = "JAVA PROFILE 1.0.2"
+private const val HEAD_MARKER = "JAVA PROFILE 1.0.2"
 
 /**
  * https://hg.openjdk.org/jdk6/jdk6/jdk/raw-file/tip/src/share/demo/jvmti/hprof/manual.html

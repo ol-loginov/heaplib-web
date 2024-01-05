@@ -17,7 +17,7 @@ interface RecordVisitor {
 class RecordVisit {
     companion object {
         val log = LoggerFactory.getLogger(RecordVisit::class.java)
-        val scanLogger = PeriodicLogger(2000L, log.isInfoEnabled)
+        val scanLogger = PeriodicLogger(10000L, log.isInfoEnabled)
     }
 
     var recordsCount = 0
