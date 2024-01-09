@@ -59,14 +59,14 @@ class HeapFileRepositoryImpl(
     override fun findAllByStatusIn(statuses: List<HeapFileStatus>): List<HeapFile> = jdbc
         .sql("select id, path, status, loadStart, loadFinish, loadProgress, loadMessage, loadError, tablePrefix from HeapFile where (:statusesLen = 0 or status in (:statuses)) order by loadStart desc")
         .param("statusesLen", statuses.size)
-        .param("statuses", statuses)
+        .param("statuses", statuses.map { it.name })
         .query(HeapFile::class.java)
         .list()
 
     override fun findAllByStatusNotIn(statuses: List<HeapFileStatus>): List<HeapFile> = jdbc
         .sql("select id, path, status, loadStart, loadFinish, loadProgress, loadMessage, loadError, tablePrefix from HeapFile where (:statusesLen = 0 or status not in (:statuses)) order by loadStart desc")
         .param("statusesLen", statuses.size)
-        .param("statuses", statuses)
+        .param("statuses", statuses.map { it.name })
         .query(HeapFile::class.java)
         .list()
 
