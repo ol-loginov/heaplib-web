@@ -1,32 +1,32 @@
 package com.github.ol_loginov.heaplibweb.services.proxies
 
 import com.github.ol_loginov.heaplibweb.repository.heap.ClassEntity
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import org.netbeans.lib.profiler.heap.*
 import java.util.*
 
 class HeapProxy(
-    private val scope: HeapScope
+    private val heapRepositories: HeapRepositories
 ) : Heap {
-    private fun proxyJavaClass(e: ClassEntity): JavaClass = JavaClassProxy(e, scope)
+    private fun proxyJavaClass(e: ClassEntity): JavaClass = JavaClassProxy(e, heapRepositories)
 
     override fun isWriteable(): Boolean = false
 
-    override fun getAllClasses(): List<JavaClass> = scope
+    override fun getAllClasses(): List<JavaClass> = heapRepositories
         .classes.streamAll()
         .map { proxyJavaClass(it) }
         .toList()
 
 
-    override fun getJavaClassByID(javaClassId: Long): JavaClass? = scope
+    override fun getJavaClassByID(javaClassId: Long): JavaClass? = heapRepositories
         .classes.findById(javaClassId)
         ?.let { proxyJavaClass(it) }
 
-    override fun getJavaClassByName(fqn: String): JavaClass? = scope
+    override fun getJavaClassByName(fqn: String): JavaClass? = heapRepositories
         .classes.findByName(fqn)
         ?.let { proxyJavaClass(it) }
 
-    override fun getJavaClassesByRegExp(regexp: String): Collection<JavaClass> = scope
+    override fun getJavaClassesByRegExp(regexp: String): Collection<JavaClass> = heapRepositories
         .classes.findAllByNameRegex(regexp)
         .map { proxyJavaClass(it) }
         .toList()

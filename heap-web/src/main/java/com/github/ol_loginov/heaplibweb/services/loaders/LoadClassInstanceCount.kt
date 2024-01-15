@@ -1,12 +1,12 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.springframework.transaction.support.TransactionOperations
 
 class LoadClassInstanceCount(
     private val transactionOperations: TransactionOperations,
-    private val heapScope: HeapScope,
+    private val heapRepositories: HeapRepositories,
     private val classCountCollector: ClassCountCollector
 ) : Task {
     private var total: Int = 0
@@ -19,7 +19,7 @@ class LoadClassInstanceCount(
         total = classCountCollector.counters.size
 
         val insert = InsertCollector("classes counts") { list ->
-            transactionOperations.executeWithoutResult { heapScope.classes.updateCounts(list) }
+            transactionOperations.executeWithoutResult { heapRepositories.classes.updateCounts(list) }
         }
 
         val task = this

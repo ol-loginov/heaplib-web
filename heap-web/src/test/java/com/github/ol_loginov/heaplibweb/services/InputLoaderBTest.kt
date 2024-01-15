@@ -59,7 +59,7 @@ class InputLoaderBTest : DatabaseTest() {
         }
 
         val heap = heapFileRepository.findAllByOrderByLoadStartDesc().get(0)
-        val heapProxy = HeapProxy(heapFileRepository.getScope(heap))
+        val heapProxy = HeapProxy(heapFileRepository.getHeapRepositories(heap))
 
         val oql = NetbeansOQLEngineForTest(heapProxy)
         oql.executeQuery("select a from [I a")

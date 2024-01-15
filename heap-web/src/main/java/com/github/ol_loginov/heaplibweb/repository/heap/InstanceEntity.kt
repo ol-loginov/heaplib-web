@@ -4,10 +4,14 @@ import com.github.ol_loginov.heaplibweb.repository.EntityInstance
 
 class InstanceEntity(
     var instanceId: Long,
+    /**
+     * Dump offset in hprof file
+     */
+    val fo: Long,
     val instanceNumber: Int,
     val javaClassId: Long,
     val rootTag: Short,
-    val size: Long,
+    val size: Int,
     val arrayTypeTag: Byte = 0,
     val arrayLength: Int = 0,
     val retainedSize: Long? = null,

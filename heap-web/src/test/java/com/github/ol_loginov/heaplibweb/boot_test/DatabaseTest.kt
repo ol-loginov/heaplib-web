@@ -55,7 +55,7 @@ abstract class DatabaseTest {
         heapsToDrop.forEach { heap ->
             transactionOperations.executeWithoutResult {
                 heapFileRepository.findById(heap)?.let { entity ->
-                    heapFileRepository.getScope(entity).dropTables()
+                    heapFileRepository.getHeapRepositories(entity).dropTables()
                 }
             }
         }

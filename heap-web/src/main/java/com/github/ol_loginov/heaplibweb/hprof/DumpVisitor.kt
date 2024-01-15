@@ -27,7 +27,8 @@ interface DumpVisitor {
     fun onPrimitiveArrayDump(view: PrimitiveArrayDumpView) = onSkip(view)
 }
 
-inline fun <T : DumpView> visit(view: T, handler: (T) -> Unit) {
+inline fun <T : DumpView> visit(fo: Long, view: T, handler: (T) -> Unit) {
+    view.fo = fo
     view.reset()
     handler(view)
     view.skip()
@@ -64,19 +65,19 @@ class DumpVisit {
             typeCounters[dumpType.ordinal] += 1
 
             when (dumpType) {
-                SubRecordType.GC_ROOT_UNKNOWN -> visit(rootUnknown, visitor::onRootUnknown)
-                SubRecordType.GC_ROOT_JNI_GLOBAL -> visit(rootJniGlobal, visitor::onRootJniGlobal)
-                SubRecordType.GC_ROOT_JNI_LOCAL -> visit(rootJniLocal, visitor::onRootJniLocal)
-                SubRecordType.GC_ROOT_JAVA_FRAME -> visit(rootJavaFrame, visitor::onRootJavaFrame)
-                SubRecordType.GC_ROOT_NATIVE_STACK -> visit(rootNativeStack, visitor::onRootNativeStack)
-                SubRecordType.GC_ROOT_STICKY_CLASS -> visit(rootStickyClass, visitor::onRootStickyClass)
-                SubRecordType.GC_ROOT_THREAD_BLOCK -> visit(rootThreadBlock, visitor::onRootThreadBlock)
-                SubRecordType.GC_ROOT_MONITOR_USED -> visit(rootMonitorUsed, visitor::onRootMonitorUsed)
-                SubRecordType.GC_ROOT_THREAD_OBJ -> visit(rootThreadObject, visitor::onRootThreadObject)
-                SubRecordType.GC_CLASS_DUMP -> visit(classDump, visitor::onClassDump)
-                SubRecordType.GC_INSTANCE_DUMP -> visit(instanceDump, visitor::onInstanceDump)
-                SubRecordType.GC_OBJ_ARRAY_DUMP -> visit(objectArrayDump, visitor::onObjectArrayDump)
-                SubRecordType.GC_PRIM_ARRAY_DUMP -> visit(primitiveArrayDump, visitor::onPrimitiveArrayDump)
+                SubRecordType.GC_ROOT_UNKNOWN -> visit(reader.position, rootUnknown, visitor::onRootUnknown)
+                SubRecordType.GC_ROOT_JNI_GLOBAL -> visit(reader.position, rootJniGlobal, visitor::onRootJniGlobal)
+                SubRecordType.GC_ROOT_JNI_LOCAL -> visit(reader.position, rootJniLocal, visitor::onRootJniLocal)
+                SubRecordType.GC_ROOT_JAVA_FRAME -> visit(reader.position, rootJavaFrame, visitor::onRootJavaFrame)
+                SubRecordType.GC_ROOT_NATIVE_STACK -> visit(reader.position, rootNativeStack, visitor::onRootNativeStack)
+                SubRecordType.GC_ROOT_STICKY_CLASS -> visit(reader.position, rootStickyClass, visitor::onRootStickyClass)
+                SubRecordType.GC_ROOT_THREAD_BLOCK -> visit(reader.position, rootThreadBlock, visitor::onRootThreadBlock)
+                SubRecordType.GC_ROOT_MONITOR_USED -> visit(reader.position, rootMonitorUsed, visitor::onRootMonitorUsed)
+                SubRecordType.GC_ROOT_THREAD_OBJ -> visit(reader.position, rootThreadObject, visitor::onRootThreadObject)
+                SubRecordType.GC_CLASS_DUMP -> visit(reader.position, classDump, visitor::onClassDump)
+                SubRecordType.GC_INSTANCE_DUMP -> visit(reader.position, instanceDump, visitor::onInstanceDump)
+                SubRecordType.GC_OBJ_ARRAY_DUMP -> visit(reader.position, objectArrayDump, visitor::onObjectArrayDump)
+                SubRecordType.GC_PRIM_ARRAY_DUMP -> visit(reader.position, primitiveArrayDump, visitor::onPrimitiveArrayDump)
             }
 
             // code below - just to make pretty log entry
@@ -93,6 +94,8 @@ class DumpVisit {
 }
 
 abstract class DumpView(var reader: HprofStreamReader, val dumpType: SubRecordType) {
+    var fo = reader.position
+
     abstract fun reset()
     protected fun clearAll(vararg lazys: LazyReset<out Any>) {
         lazys.forEach { it.clear() }

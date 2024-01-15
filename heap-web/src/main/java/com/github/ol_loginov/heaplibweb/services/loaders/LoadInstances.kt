@@ -1,10 +1,26 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
-import com.github.ol_loginov.heaplibweb.hprof.*
+import com.github.ol_loginov.heaplibweb.hprof.ClassDump
+import com.github.ol_loginov.heaplibweb.hprof.DumpVisitor
+import com.github.ol_loginov.heaplibweb.hprof.HprofFile
+import com.github.ol_loginov.heaplibweb.hprof.HprofValueType
+import com.github.ol_loginov.heaplibweb.hprof.RootJavaFrameDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootJniGlobalDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootJniLocalDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootMonitorUsedDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootNativeStackDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootStickyClassDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootThreadBlockDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootThreadObjectDumpView
+import com.github.ol_loginov.heaplibweb.hprof.RootUnknownDumpView
 import com.github.ol_loginov.heaplibweb.hprof.views.InstanceDumpView
 import com.github.ol_loginov.heaplibweb.hprof.views.ObjectArrayDumpView
 import com.github.ol_loginov.heaplibweb.hprof.views.PrimitiveArrayDumpView
-import com.github.ol_loginov.heaplibweb.repository.heap.*
+import com.github.ol_loginov.heaplibweb.repository.heap.FieldValueEntity
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
+import com.github.ol_loginov.heaplibweb.repository.heap.InstanceEntity
+import com.github.ol_loginov.heaplibweb.repository.heap.ObjectArrayEntity
+import com.github.ol_loginov.heaplibweb.repository.heap.PrimitiveArrayEntity
 import com.github.ol_loginov.heaplibweb.support.pretty
 import com.github.ol_loginov.heaplibweb.support.use
 import org.springframework.transaction.support.TransactionOperations
@@ -12,7 +28,7 @@ import org.springframework.transaction.support.TransactionOperations
 internal class LoadInstances(
     private val hprof: HprofFile,
     private val transactionOperations: TransactionOperations,
-    private val heapScope: HeapScope,
+    private val heapRepositories: HeapRepositories,
     private val classDumpLookup: ClassDumpLookup,
     private val classCountCollector: ClassCountCollector,
     private val javaRootCollector: JavaRootCollector,
@@ -26,7 +42,7 @@ internal class LoadInstances(
     private var fieldsLoaded = 0
     private var arrayItemsLoaded = 0
 
-    override fun getText() = "import instances: ${passed.pretty()} dumps (instances=${instancesLoaded.pretty()}, primitive arrays=${primitiveArrays.pretty()}, object arrays=${objectArrays.pretty()}, field values=${fieldsLoaded.pretty()}, array items=${arrayItemsLoaded.pretty()})"
+    override fun getText() = "import instances: ${passed.pretty()} dumps (instances=${instancesLoaded.pretty()}, primitive arrays=${primitiveArrays.pretty()}, object arrays=${objectArrays.pretty()} with ${arrayItemsLoaded.pretty()} items, field values=${fieldsLoaded.pretty()})"
 
     override fun run(callback: Task.Callback) {
         passed = 0
@@ -34,16 +50,16 @@ internal class LoadInstances(
         callback.saveProgress(this, true)
 
         val instanceInsert = InsertCollector("instances") { list ->
-            transactionOperations.executeWithoutResult { heapScope.instanceLoader.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapRepositories.instanceLoader.persistAll(list) }
         }
         val fieldValuesInsert = InsertCollector("field values") { list ->
-            transactionOperations.executeWithoutResult { heapScope.fieldValueLoader.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapRepositories.fieldValueLoader.persistAll(list) }
         }
         val primitiveArrayInsert = InsertCollector("primitive array items") { list ->
-            transactionOperations.executeWithoutResult { heapScope.primitiveArrayItems.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapRepositories.primitiveArrayItems.persistAll(list) }
         }
         val objectArrayInsert = InsertCollector("object array items") { list ->
-            transactionOperations.executeWithoutResult { heapScope.objectArrayLoader.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapRepositories.objectArrayLoader.persistAll(list) }
         }
 
         val task = this
@@ -84,12 +100,12 @@ internal class LoadInstances(
 
     private fun persistObjectArray(dump: ObjectArrayDumpView, instanceInsert: (InstanceEntity) -> Unit, arrayInsert: (ObjectArrayEntity) -> Unit) {
         objectArrays++
+        val classDump = classDumpLookup.lookup(dump.classId)
         val instanceNumber = classCountCollector.increment(dump.classId)
         instanceInsert(
             InstanceEntity(
-                dump.objectId.toLong(), instanceNumber, dump.classId.toLong(), 0,
-                dump.arraySize * HprofValueType.Object.size.toLong(), HprofValueType.Object.tag.toByte(), dump.arraySize,
-                null, null
+                dump.objectId.toLong(), dump.fo, instanceNumber, dump.classId.toLong(), 0,
+                classDump.instanceSize, HprofValueType.Object.tag.toByte(), dump.arraySize
             )
         )
         dump.items
@@ -105,9 +121,9 @@ internal class LoadInstances(
         val instanceNumber = classCountCollector.increment(classObjectId)
         instanceInsert(
             InstanceEntity(
-                view.arrayObjectId.toLong(), instanceNumber, classObjectId.toLong(), 0,
-                view.arrayItemType.size.toLong() * view.arrayItemCount.toLong(), view.arrayItemType.tag.toByte(), view.arrayItemCount,
-                null, null
+                view.arrayObjectId.toLong(), view.fo, instanceNumber, classObjectId.toLong(), 0,
+                0, view.arrayItemType.tag.toByte(), view.arrayItemCount,
+                view.arrayItemType.size.toLong() * view.arrayItemCount.toLong(), null
             )
         )
         if (loadPrimitiveArrayItems) {
@@ -127,7 +143,7 @@ internal class LoadInstances(
         val classDump = classDumpLookup.lookup(dump.classObjectId)
         val instanceNumber = classCountCollector.increment(dump.classObjectId)
 
-        val instanceEntity = InstanceEntity(dump.objectId.toLong(), instanceNumber, dump.classObjectId.toLong(), 0, classDump.instanceSize.toLong())
+        val instanceEntity = InstanceEntity(dump.objectId.toLong(), dump.fo, instanceNumber, dump.classObjectId.toLong(), 0, classDump.instanceSize.toInt())
         instanceEntitySaver(instanceEntity)
 
         if (dump.hasFieldData()) {
@@ -139,13 +155,11 @@ internal class LoadInstances(
                     val fieldType = field.type
                     val valueAny = fieldReader.any(fieldType)
 
-                    val fieldValueEntity = FieldValueEntity(
-                        dump.objectId.toLong(), field.id,
-                        FieldValueEntity.anyToValueText(fieldType, valueAny),
-                        if (fieldType == HprofValueType.Object) (valueAny as ULong).toLong() else 0L
-                    )
-                    fieldsLoaded++
-                    fieldEntitySaver(fieldValueEntity)
+                    if (fieldType == HprofValueType.Object) {
+                        val fieldValueEntity = FieldValueEntity(dump.objectId.toLong(), field.id, (valueAny as ULong).toLong())
+                        fieldsLoaded++
+                        fieldEntitySaver(fieldValueEntity)
+                    }
                 }
                 fieldDefiner = if (fieldDefiner.superClassObjectId == 0UL) null else classDumpLookup.lookup(fieldDefiner.superClassObjectId)
             }

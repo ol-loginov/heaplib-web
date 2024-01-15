@@ -10,4 +10,5 @@ interface FieldRepository {
     fun streamAllOrderById(): Stream<FieldEntity>
 
     fun findById(id: Int): FieldEntity?
+    fun findByDeclaringClassIdAndName(declaringClassId: Long, name: String): FieldEntity?
 }

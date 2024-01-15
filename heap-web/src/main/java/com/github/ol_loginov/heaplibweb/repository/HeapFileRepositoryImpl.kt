@@ -1,6 +1,6 @@
 package com.github.ol_loginov.heaplibweb.repository
 
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations
 import org.springframework.jdbc.core.simple.JdbcClient
@@ -76,5 +76,5 @@ class HeapFileRepositoryImpl(
         .query(HeapFile::class.java)
         .optional().orElse(null)
 
-    override fun getScope(heapFile: HeapFile) = HeapScope(heapFile.tablePrefix, jdbc, jdbcOperations)
+    override fun getHeapRepositories(heapFile: HeapFile): HeapRepositories = HeapRepositories(heapFile.tablePrefix, jdbc, jdbcOperations)
 }

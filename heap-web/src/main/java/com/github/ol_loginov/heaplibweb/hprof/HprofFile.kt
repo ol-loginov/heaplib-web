@@ -73,7 +73,7 @@ class HprofFile(private val file: Path) {
             override fun onClassDump(view: ClassDumpView) {
                 classDumps[view.classObjectId] = ClassDump(
                     view.classObjectId, view.superClassObjectId, view.classLoaderObjectId,
-                    view.instanceSize, classNames[view.classObjectId] ?: StringRef(),
+                    view.instanceSize.toInt(), classNames[view.classObjectId] ?: StringRef(),
                     view.constantPool, view.staticFields, view.instanceFields
                 )
             }

@@ -15,6 +15,7 @@ class InstanceLoaderByInsert(
 ) : InstanceLoader {
     private fun persistQueryParameters(entity: InstanceEntity) = mapOf(
         "instanceId" to entity.instanceId,
+        "fo" to entity.fo,
         "instanceNumber" to entity.instanceNumber,
         "javaClassId" to entity.javaClassId,
         "rootTag" to entity.rootTag,
@@ -40,6 +41,7 @@ class InstanceLoaderByLocalFile(
             entities.forEach { e ->
                 writer
                     .append(e.instanceId).append(TAB)
+                    .append(e.fo).append(TAB)
                     .append(e.instanceNumber).append(TAB)
                     .append(e.javaClassId).append(TAB)
                     .append(e.rootTag).append(TAB)
@@ -57,7 +59,7 @@ class InstanceLoaderByLocalFile(
             LOAD DATA LOCAL INFILE '$dataFile' INTO TABLE Instance 
                 FIELDS TERMINATED BY '\t' OPTIONALLY ENCLOSED BY '"'
                 LINES TERMINATED BY '\n'
-                (instanceId,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,@retainedSize,@reachableSize)
+                (instanceId,fo,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,@retainedSize,@reachableSize)
                 SET 
                     retainedSize = NULLIF(@retainedSize,''),
                     reachableSize = NULLIF(@reachableSize,'')

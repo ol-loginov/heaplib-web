@@ -104,8 +104,8 @@ class InputLoader @Inject constructor(
         heapFile.generateTablePrefix()
         transactionOperations.execute { heapFileRepository.merge(heapFile) }
 
-        val heapScope = heapFileRepository.getScope(heapFile)
-        heapScope.createTables()
+        val heapRepositories = heapFileRepository.getHeapRepositories(heapFile)
+        heapRepositories.createTables()
 
         progressLimit = 0
         progressCurrent = 0
@@ -119,13 +119,13 @@ class InputLoader @Inject constructor(
         val fieldNameLookup = FieldNameLookup()
 
         val stepList = listOf(
-            LoadJavaClasses(hprofFile, transactionOperations, heapScope, classDumpLookup),
-            LoadFieldNames(transactionOperations, heapScope, classDumpLookup, fieldNameLookup),
-            LoadJavaClassFields(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup, fieldNameLookup),
-            LoadJavaClassStatics(transactionOperations, heapScope, classDumpLookup, fieldEntityLookup, fieldNameLookup),
-            LoadInstances(hprofFile, transactionOperations, heapScope, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
-            LoadClassInstanceCount(transactionOperations, heapScope, classCountCollector),
-            LoadInstanceRootFlags(transactionOperations, heapScope, javaRootCollector)
+            LoadJavaClasses(hprofFile, transactionOperations, heapRepositories, classDumpLookup),
+            LoadFieldNames(transactionOperations, heapRepositories, classDumpLookup, fieldNameLookup),
+            LoadJavaClassFields(transactionOperations, heapRepositories, classDumpLookup, fieldEntityLookup, fieldNameLookup),
+            LoadJavaClassStatics(transactionOperations, heapRepositories, classDumpLookup, fieldEntityLookup, fieldNameLookup),
+            LoadInstances(hprofFile, transactionOperations, heapRepositories, classDumpLookup, classCountCollector, javaRootCollector, fieldEntityLookup, loadPrimitiveArrayItems),
+            LoadClassInstanceCount(transactionOperations, heapRepositories, classCountCollector),
+            LoadInstanceRootFlags(transactionOperations, heapRepositories, javaRootCollector)
         )
 
         stepList.forEach {
@@ -140,6 +140,13 @@ class InputLoader @Inject constructor(
             .mapIndexed { index, it -> "${index + 1}) ${it.description.padEnd(stepTimingsTextLength)}\t${it.duration.toMillis() / 1000.0} sec" }
             .joinToString("\n")
         saveFileLoadMessage("Step timings for HeapFile#${heapFile.id}: total time - ${stepTimingsTotal / 1000.0} sec\n$stepTimingsText")
+
+        transactionOperations.executeWithoutResult {
+            heapFileRepository.findById(heapFileId)?.also {
+                it.status = HeapFileStatus.LOADED
+                heapFileRepository.merge(it)
+            } ?: throw IllegalStateException("no HeapFile#${heapFileId}")
+        }
     }
 
     private fun runStep(task: Task): StepTimings {

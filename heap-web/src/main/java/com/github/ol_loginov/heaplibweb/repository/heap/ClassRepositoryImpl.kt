@@ -20,7 +20,7 @@ internal class ClassRepositoryImpl(
     }
 
     override fun findById(id: Long): ClassEntity? = jdbc
-        .sql("select id, classLoaderObjectId, name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId from Class where id = :id")
+        .sql("select id,superClassId,classLoaderObjectId, name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass from Class where id = :id")
         .param("id", id)
         .query(ClassEntity::class.java)
         .optional().orElse(null)
@@ -30,7 +30,7 @@ internal class ClassRepositoryImpl(
     override fun findByName(name: String): ClassEntity? = jdbc
         .sql(
             """
-            select id,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId 
+            select id,superClassId,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass 
             from Class 
             where name = :name
         """
@@ -42,7 +42,7 @@ internal class ClassRepositoryImpl(
     override fun findAllByNameRegex(nameRegex: String): Stream<ClassEntity> = jdbc
         .sql(
             """
-            select id,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId 
+            select id,superClassId,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass 
             from Class 
             where regexp_like(name, :nameRegex)
         """
@@ -52,14 +52,14 @@ internal class ClassRepositoryImpl(
         .stream()
 
     override fun streamAll(): Stream<ClassEntity> = jdbc
-        .sql("select id,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId from Class")
+        .sql("select id,superClassId,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass from Class")
         .query(ClassEntity::class.java)
         .stream()
 
     override fun streamAllBySuperClassId(superClassId: Long): Stream<ClassEntity> = jdbc
         .sql(
             """
-            select id,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId 
+            select id,superClassId,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass 
             from Class 
             where superClassId = :superClassId
         """

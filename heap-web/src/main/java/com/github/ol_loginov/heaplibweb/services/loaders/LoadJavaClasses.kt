@@ -3,7 +3,7 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.hprof.HprofFile
 import com.github.ol_loginov.heaplibweb.repository.heap.ClassEntity
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
@@ -11,7 +11,7 @@ import org.springframework.transaction.support.TransactionOperations
 internal class LoadJavaClasses(
     private val hprof: HprofFile,
     private val transactionOperations: TransactionOperations,
-    private val scope: HeapScope,
+    private val heapRepositories: HeapRepositories,
     private val classDumpLookup: ClassDumpLookup
 ) : Task {
     companion object {
@@ -34,7 +34,7 @@ internal class LoadJavaClasses(
         callback.saveProgress(this, true)
         val insert = InsertCollector("classes") { list ->
             transactionOperations.executeWithoutResult {
-                scope.classLoader.persistAll(list)
+                heapRepositories.classLoader.persistAll(list)
             }
         }
 
@@ -59,13 +59,13 @@ internal class LoadJavaClasses(
         insert(
             ClassEntity(
                 clazz.classObjectId.toLong(),
-                nullIfZero(clazz.classLoaderObjectId.toLong()),
+                clazz.superClassObjectId.toLong(),
+                clazz.classLoaderObjectId.toLong(),
                 unmangleJvmClassName(clazz.className.orEmpty()),
                 null,
                 clazz.className.orEmpty().startsWith('['), // clazz.isArray,
-                clazz.instanceSize.toInt(),
-                0, null,
-                nullIfZero(clazz.superClassObjectId.toLong())
+                clazz.instanceSize,
+                0
             )
         )
     }

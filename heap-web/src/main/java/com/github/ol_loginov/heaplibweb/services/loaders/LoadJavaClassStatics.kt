@@ -3,13 +3,13 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.hprof.HprofValueType
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldValueEntity
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.springframework.transaction.support.TransactionOperations
 
 internal class LoadJavaClassStatics(
     private val transactionOperations: TransactionOperations,
-    private val heapScope: HeapScope,
+    private val heapRepositories: HeapRepositories,
     private val classDumpLookup: ClassDumpLookup,
     private val fieldEntityLookup: FieldEntityLookup,
     private val fieldNameLookup: FieldNameLookup
@@ -26,7 +26,7 @@ internal class LoadJavaClassStatics(
         passed = 0
 
         val fieldValuesInsert = InsertCollector("field values") { list ->
-            transactionOperations.executeWithoutResult { heapScope.fieldValueLoader.persistAll(list) }
+            transactionOperations.executeWithoutResult { heapRepositories.fieldValueLoader.persistAll(list) }
         }
 
         fieldValuesInsert.use {
@@ -48,13 +48,12 @@ internal class LoadJavaClassStatics(
             .filter { it.name.name != null }
             .forEach { value ->
                 fields[fieldNameLookup.nameToId(value.name)]?.let { field ->
-                    val fieldValueEntity = FieldValueEntity(
-                        dump.classObjectId.toLong(), field.id,
-                        FieldValueEntity.anyToValueText(value.type, value.value),
-                        if (value.type == HprofValueType.Object) (value.value as ULong).toLong() else 0L
-                    )
-                    insert(fieldValueEntity)
-                    fieldsLoaded++
+                    val fieldValueReference = if (value.type == HprofValueType.Object) (value.value as ULong).toLong() else 0L
+                    val fieldValueEntity = FieldValueEntity(dump.classObjectId.toLong(), field.id, fieldValueReference)
+                    if (value.type == HprofValueType.Object) {
+                        insert(fieldValueEntity)
+                        fieldsLoaded++
+                    }
                 }
             }
     }

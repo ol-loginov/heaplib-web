@@ -17,7 +17,6 @@ internal class FieldValueLoaderByInsert(
     private fun persistQueryParameters(entity: FieldValueEntity) = mapOf(
         "instanceId" to entity.instanceId,
         "fieldId" to entity.fieldId,
-        "value" to entity.value,
         "valueInstanceId" to entity.valueInstanceId
     )
 
@@ -41,7 +40,6 @@ class FieldValueLoaderByLocalFile(
                 writer
                     .append(e.instanceId).append(TAB)
                     .append(e.fieldId).append(TAB)
-                    .appendMysqlQuoted(e.value).append(TAB)
                     .append(e.valueInstanceId).append(NEWLINE)
             }
             writer.flush()
@@ -53,7 +51,7 @@ class FieldValueLoaderByLocalFile(
             LOAD DATA LOCAL INFILE '$dataFile' INTO TABLE FieldValue 
                 FIELDS TERMINATED BY '\t' OPTIONALLY ENCLOSED BY '"'
                 LINES TERMINATED BY '\n'
-                (instanceId,fieldId,value,valueInstanceId)
+                (instanceId,fieldId,valueInstanceId)
 """
             )
             .update()

@@ -1,7 +1,7 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import com.github.ol_loginov.heaplibweb.repository.heap.NameEntity
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.slf4j.LoggerFactory
@@ -11,7 +11,7 @@ private val log = LoggerFactory.getLogger(LoadFieldNames::class.java)
 
 internal class LoadFieldNames(
     private val transactionOperations: TransactionOperations,
-    private val heapScope: HeapScope,
+    private val heapRepositories: HeapRepositories,
     private val classDumpLookup: ClassDumpLookup,
     private val fieldNameLookup: FieldNameLookup
 ) : Task {
@@ -29,7 +29,7 @@ internal class LoadFieldNames(
 
         val insert = InsertCollector("fields") { list ->
             transactionOperations.executeWithoutResult { _ ->
-                heapScope.names.persistAll(list)
+                heapRepositories.names.persistAll(list)
             }
         }
 
@@ -44,7 +44,7 @@ internal class LoadFieldNames(
 
         log.info("refresh names")
         transactionOperations.executeWithoutResult { _ ->
-            fieldNameLookup.refresh(heapScope)
+            fieldNameLookup.refresh(heapRepositories)
         }
 
         callback.saveProgress(this, true)

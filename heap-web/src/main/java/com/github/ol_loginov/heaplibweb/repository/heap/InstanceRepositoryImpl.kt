@@ -21,7 +21,7 @@ internal class InstanceRepositoryImpl(
     override fun findById(instanceId: Long): InstanceEntity? = jdbc
         .sql(
             """
-            select instanceId,instanceNumber,javaClassId,rootTag,size,arrayTypeTag, arrayLength, retainedSize,reachableSize
+            select instanceId,fo,instanceNumber,javaClassId,rootTag,size,arrayTypeTag, arrayLength, retainedSize,reachableSize
             from Instance 
             where instanceId = :instanceId
         """
@@ -33,7 +33,7 @@ internal class InstanceRepositoryImpl(
     override fun streamAllByJavaClassId(javaClassId: Long): Stream<InstanceEntity> = jdbc
         .sql(
             """
-            select instanceId,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,retainedSize,reachableSize
+            select instanceId,fo,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,retainedSize,reachableSize
             from Instance
             where javaClassId = :javaClassId
         """
@@ -41,4 +41,42 @@ internal class InstanceRepositoryImpl(
         .param("javaClassId", javaClassId)
         .query(InstanceEntity::class.java)
         .stream()
+
+    override fun findAllAfterId(afterId: Long, limit: Int): List<InstanceEntity> = jdbc
+        .sql(
+            """
+            select instanceId,fo,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,retainedSize,reachableSize
+            from Instance
+            where instanceId > :afterId
+        """
+        )
+        .param("afterId", afterId)
+        .query(InstanceEntity::class.java)
+        .list()
+
+    override fun findAllRoots(): List<InstanceEntity> = jdbc
+        .sql(
+            """
+            select instanceId,fo,instanceNumber,javaClassId,rootTag,size,arrayTypeTag,arrayLength,retainedSize,reachableSize
+            from Instance
+            where rootTag > 0
+        """
+        )
+        .query(InstanceEntity::class.java)
+        .list()
+
+    override fun findAllRootInstances(): List<Long> = jdbc
+        .sql("select instanceId from Instance where rootTag > 0")
+        .query(Long::class.java)
+        .list()
+
+    override fun clearRetainedSize() = jdbc
+        .sql("update Instance set retainedSize = null where 1 = 1")
+        .update()
+
+    override fun updateRetainedSizeByClass(javaClassId: Long, retainedSize: Long) = jdbc
+        .sql("update Instance set retainedSize = :retainedSize where javaClassId = :javaClassId")
+        .param("javaClassId", javaClassId)
+        .param("retainedSize", retainedSize)
+        .update()
 }

@@ -2,7 +2,7 @@ package com.github.ol_loginov.heaplibweb.services.loaders
 
 import com.github.ol_loginov.heaplibweb.hprof.ClassDump
 import com.github.ol_loginov.heaplibweb.repository.heap.FieldEntity
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 import com.github.ol_loginov.heaplibweb.support.pretty
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.support.TransactionOperations
@@ -12,7 +12,7 @@ private val log = LoggerFactory.getLogger(LoadJavaClassFields::class.java)
 
 internal class LoadJavaClassFields(
     private val transactionOperations: TransactionOperations,
-    private val heapScope: HeapScope,
+    private val heapRepositories: HeapRepositories,
     private val classDumpLookup: ClassDumpLookup,
     private val fieldEntityLookup: FieldEntityLookup,
     private val fieldNameLookup: FieldNameLookup
@@ -31,7 +31,7 @@ internal class LoadJavaClassFields(
 
         val insert = InsertCollector("fields") { list ->
             transactionOperations.executeWithoutResult { _ ->
-                heapScope.fields.persistAll(list)
+                heapRepositories.fields.persistAll(list)
             }
         }
 
@@ -45,7 +45,7 @@ internal class LoadJavaClassFields(
 
         log.info("refresh fields set")
         transactionOperations.executeWithoutResult { _ ->
-            fieldEntityLookup.refresh(heapScope)
+            fieldEntityLookup.refresh(heapRepositories)
         }
 
         callback.saveProgress(this, true)

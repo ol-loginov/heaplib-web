@@ -14,13 +14,13 @@ import kotlin.io.path.deleteExisting
 class WriterExtensionsTests {
     @Test
     fun appendSomeString() {
-        val e = FieldValueEntity(34356597872, 3382, "20", 0)
+        val e = FieldValueEntity(34356597872, 3382, 0)
 
         val backed = ByteArrayOutputStream()
         BufferedWriter(OutputStreamWriter(backed, Charsets.UTF_8))
             .append(e.instanceId).append(TAB)
             .append(e.fieldId).append(TAB)
-            .appendMysqlQuoted(e.value).append(TAB)
+            .appendMysqlQuoted("20").append(TAB)
             .append(e.valueInstanceId).append(NEWLINE)
             .flush()
         assertThat(backed.toString(Charsets.UTF_8)).isEqualTo("34356597872\t3382\t\"20\"\t0\n")
@@ -30,7 +30,7 @@ class WriterExtensionsTests {
             writer
                 .append(e.instanceId).append(TAB)
                 .append(e.fieldId).append(TAB)
-                .appendMysqlQuoted(e.value).append(TAB)
+                .appendMysqlQuoted("20").append(TAB)
                 .append(e.valueInstanceId).append(NEWLINE)
         }
         dataFile.deleteExisting()

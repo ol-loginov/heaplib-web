@@ -51,14 +51,14 @@ class ClassLoaderByLocalFile(
             entities.forEach { e ->
                 writer
                     .append(e.id).append(TAB)
+                    .append(e.superClassId).append(TAB)
                     .append(e.classLoaderObjectId).append(TAB)
                     .append(e.name).append(TAB)
                     .append(e.allInstancesSize).append(TAB)
                     .append(e.array).append(TAB)
                     .append(e.instanceSize).append(TAB)
                     .append(e.instancesCount).append(TAB)
-                    .append(e.retainedSizeByClass).append(TAB)
-                    .append(e.superClassId).append(NEWLINE)
+                    .append(e.retainedSizeByClass).append(NEWLINE)
             }
         }
 
@@ -68,9 +68,9 @@ class ClassLoaderByLocalFile(
             LOAD DATA LOCAL INFILE '$dataFile' INTO TABLE Class 
                 FIELDS TERMINATED BY '\t' OPTIONALLY ENCLOSED BY '"'
                 LINES TERMINATED BY '\n'
-                (id,@classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,retainedSizeByClass,superClassId)
+                (id,superClassId,classLoaderObjectId,name,allInstancesSize,array,instanceSize,instancesCount,@retainedSizeByClass)
                 SET 
-                    classLoaderObjectId = NULLIF(@classLoaderObjectId,'')
+                    retainedSizeByClass = NULLIF(@retainedSizeByClass,'')
 """
             )
             .update()

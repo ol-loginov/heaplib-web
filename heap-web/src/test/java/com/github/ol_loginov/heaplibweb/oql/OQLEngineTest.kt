@@ -34,7 +34,7 @@ class OQLEngineTest {
     @Test
     fun testSuite() {
 //        val heap = heapFileRepository.findAllByOrderByLoadStartDesc().first()
-//        val heapProxy = HeapProxy(heapFileRepository.getScope(heap))
+//        val heapProxy = HeapProxy(heapFileRepository.getHeapRepositories(heap))
 
         instance = OQLEngineForTest()
         log.info("testAltTypeNames")

@@ -1,7 +1,5 @@
 package com.github.ol_loginov.heaplibweb.repository.heap
 
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.support.GeneratedKeyHolder
 import java.util.stream.Stream
 
 internal class FieldRepositoryImpl(
@@ -25,6 +23,13 @@ internal class FieldRepositoryImpl(
     override fun findById(id: Int): FieldEntity? = jdbc
         .sql("select id,declaringClassId,nameId,staticFlag,typeTag from Field where id = :id")
         .param("id", id)
+        .query(FieldEntity::class.java)
+        .optional().orElse(null)
+
+    override fun findByDeclaringClassIdAndName(declaringClassId: Long, name: String): FieldEntity? = jdbc
+        .sql("select F.id,F.declaringClassId,F.nameId,F.staticFlag,F.typeTag from Field F inner join Name N on N.id = F.nameId where F.declaringClassId = :declaringClassId and N.name = :name")
+        .param("declaringClassId", declaringClassId)
+        .param("name", name)
         .query(FieldEntity::class.java)
         .optional().orElse(null)
 

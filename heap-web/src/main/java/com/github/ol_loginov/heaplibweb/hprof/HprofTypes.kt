@@ -91,8 +91,8 @@ enum class HprofValueType(val tag: UByte, val size: kotlin.Byte) {
     companion object {
         private val TYPE_LOOKUP = values().associateBy { e -> e.tag }
 
-        fun valueOf(tag: UByte): HprofValueType = TYPE_LOOKUP[tag]
-            ?: throw IllegalArgumentException("no type for tag $tag")
+        fun valueOf(tag: kotlin.Byte): HprofValueType = valueOf(tag.toUByte())
+        fun valueOf(tag: UByte): HprofValueType = TYPE_LOOKUP[tag] ?: throw IllegalArgumentException("no type for tag $tag")
     }
 }
 
@@ -125,7 +125,7 @@ data class ClassDump(
     val classLoaderObjectId: ULong,
 //    val signersObjectId: ULong,
 //    val domainObjectId: ULong,
-    val instanceSize: UInt,
+    val instanceSize: Int,
 
     val className: StringRef,
 

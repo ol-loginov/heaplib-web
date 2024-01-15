@@ -73,7 +73,7 @@ class NetbeansOQLEngineTest : DatabaseTest() {
     @Test
     fun testSuite() {
         val heap = heapFileRepository.findAllByOrderByLoadStartDesc().first()
-        val heapProxy = HeapProxy(heapFileRepository.getScope(heap))
+        val heapProxy = HeapProxy(heapFileRepository.getHeapRepositories(heap))
 
         instance = NetbeansOQLEngineForTest(heapProxy)
         log.info("testAltTypeNames")

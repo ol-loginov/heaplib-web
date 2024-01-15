@@ -8,14 +8,14 @@ create table Name
 create table Class
 (
     id                  bigint       not null primary key,
-    classLoaderObjectId bigint,
+    superClassId        bigint       not null,
+    classLoaderObjectId bigint       not null,
     name                varchar(512) not null collate utf8mb4_0900_as_cs,
     allInstancesSize    bigint,
     array               bit(1),
     instanceSize        int,
     instancesCount      int          not null,
     retainedSizeByClass bigint,
-    superClassId        bigint,
     index Class_IX_N (name)
 ) engine InnoDB;
 
@@ -33,10 +33,11 @@ create table Field
 create table Instance
 (
     instanceId     bigint    not null primary key,
+    fo             bigint    not null,
     instanceNumber int       not null,
     javaClassId    bigint    not null,
     rootTag        mediumint not null,
-    size           bigint    not null,
+    size           int       not null,
     arrayTypeTag   tinyint   not null,
     arrayLength    int       not null,
     retainedSize   bigint    null,
@@ -47,7 +48,6 @@ create table FieldValue
 (
     instanceId      bigint not null,
     fieldId         int    not null,
-    value           varchar(32),
     valueInstanceId bigint,
     primary key FieldValue_PK (instanceId, fieldId),
     index FieldValue_IX_DII (instanceId)

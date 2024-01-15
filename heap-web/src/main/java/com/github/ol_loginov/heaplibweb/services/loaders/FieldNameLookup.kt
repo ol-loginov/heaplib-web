@@ -1,13 +1,13 @@
 package com.github.ol_loginov.heaplibweb.services.loaders
 
 import com.github.ol_loginov.heaplibweb.hprof.StringRef
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 
 class FieldNameLookup {
     private val nameToId = mutableMapOf<String, Int>()
 
-    fun refresh(heapScope: HeapScope) {
-        heapScope.names.streamAll().use { stream ->
+    fun refresh(heapRepositories: HeapRepositories) {
+        heapRepositories.names.streamAll().use { stream ->
             stream.forEach {
                 nameToId[it.name] = it.id
             }

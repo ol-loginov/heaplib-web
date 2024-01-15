@@ -1,6 +1,6 @@
 package com.github.ol_loginov.heaplibweb.repository
 
-import com.github.ol_loginov.heaplibweb.repository.heap.HeapScope
+import com.github.ol_loginov.heaplibweb.repository.heap.HeapRepositories
 
 interface HeapFileRepository {
     fun persist(entity: HeapFile): HeapFile
@@ -16,5 +16,5 @@ interface HeapFileRepository {
 
     fun findFirstByPathOrderByIdDesc(path: String): HeapFile?
 
-    fun getScope(heapFile: HeapFile): HeapScope
+    fun getHeapRepositories(heapFile: HeapFile): HeapRepositories
 }
